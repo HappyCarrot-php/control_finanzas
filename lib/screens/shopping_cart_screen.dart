@@ -393,10 +393,18 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
   }
 
   void _showAddItemDialog() {
-    final productNameController = TextEditingController();
+    final productNameController = TextEditingController(text: 'Producto');
     final priceController = TextEditingController();
     final quantityController = TextEditingController(text: '1');
     final notesController = TextEditingController();
+
+    // Seleccionar el texto automáticamente cuando se enfoque
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      productNameController.selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: productNameController.text.length,
+      );
+    });
 
     showDialog(
       context: context,
@@ -422,6 +430,7 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
             children: [
               TextField(
                 controller: productNameController,
+                autofocus: true,
                 decoration: InputDecoration(
                   labelText: 'Nombre del producto',
                   labelStyle: const TextStyle(color: Colors.black87),
@@ -432,6 +441,13 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
                 ),
                 style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
                 textCapitalization: TextCapitalization.words,
+                onTap: () {
+                  // Seleccionar todo el texto al hacer clic
+                  productNameController.selection = TextSelection(
+                    baseOffset: 0,
+                    extentOffset: productNameController.text.length,
+                  );
+                },
               ),
               const SizedBox(height: 15),
               Row(
@@ -466,6 +482,13 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
                       ),
                       style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
                       keyboardType: TextInputType.number,
+                      onTap: () {
+                        // Seleccionar todo el texto al hacer clic
+                        quantityController.selection = TextSelection(
+                          baseOffset: 0,
+                          extentOffset: quantityController.text.length,
+                        );
+                      },
                     ),
                   ),
                 ],
