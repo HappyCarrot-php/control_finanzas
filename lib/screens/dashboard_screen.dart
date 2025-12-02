@@ -344,6 +344,40 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
               
               const Divider(color: AppTheme.chromeDark),
               
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.chromeMedium.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.settings,
+                    color: AppTheme.chromeLight,
+                  ),
+                ),
+                title: const Text(
+                  'Ajustes',
+                  style: TextStyle(
+                    color: AppTheme.chromeLight,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                subtitle: const Text(
+                  'Bloqueo y configuración general',
+                  style: TextStyle(
+                    color: AppTheme.chromeMedium,
+                    fontSize: 12,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context, '/settings');
+                },
+              ),
+
+              const Divider(color: AppTheme.chromeDark),
+
               // Balance Total (informativo)
               Padding(
                 padding: const EdgeInsets.all(16.0),

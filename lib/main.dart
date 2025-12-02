@@ -4,8 +4,11 @@ import 'package:provider/provider.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'theme/app_theme.dart';
 import 'providers/finance_provider.dart';
+import 'providers/settings_provider.dart';
 import 'screens/splash_screen.dart';
 import 'screens/dashboard_screen.dart';
+import 'screens/password_lock_screen.dart';
+import 'screens/settings_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,8 +40,11 @@ class WealthVaultApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => FinanceProvider(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => FinanceProvider()),
+        ChangeNotifierProvider(create: (context) => SettingsProvider()),
+      ],
       child: MaterialApp(
         title: 'WealthVault',
         debugShowCheckedModeBanner: false,
@@ -47,6 +53,8 @@ class WealthVaultApp extends StatelessWidget {
         routes: {
           '/': (context) => const SplashScreen(),
           '/dashboard': (context) => const DashboardScreen(),
+          '/password-lock': (context) => const PasswordLockScreen(),
+          '/settings': (context) => const SettingsScreen(),
         },
       ),
     );

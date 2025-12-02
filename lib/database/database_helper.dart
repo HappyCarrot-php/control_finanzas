@@ -23,7 +23,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 3,
+      version: 4,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
@@ -88,6 +88,18 @@ class DatabaseHelper {
       await db.execute('''
         ALTER TABLE transactions ADD COLUMN subcategoryId INTEGER
       ''');
+    }
+
+    if (oldVersion < 4) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS app_settings (
+          id INTEGER PRIMARY KEY,
+          passwordEnabled INTEGER NOT NULL DEFAULT 0,
+          password TEXT
+        )
+      ''');
+
+      await _ensureDefaultSettings(db);
     }
   }
 
@@ -159,9 +171,18 @@ class DatabaseHelper {
       )
     ''');
 
+    await db.execute('''
+      CREATE TABLE app_settings (
+        id INTEGER PRIMARY KEY,
+        passwordEnabled INTEGER NOT NULL DEFAULT 0,
+        password TEXT
+      )
+    ''');
+
     // Insertar datos predeterminados
     await _insertDefaultCategories(db);
     await _insertDefaultExpenseTemplates(db);
+    await _ensureDefaultSettings(db);
   }
 
   Future<void> _insertDefaultExpenseTemplates(Database db) async {
@@ -518,6 +539,84 @@ class DatabaseHelper {
     query += ' GROUP BY c.id ORDER BY total DESC';
 
     return await db.rawQuery(query, args);
+  }
+
+  // Configuración y seguridad de la aplicación
+  Future<Map<String, dynamic>> getAppSettings() async {
+    final db = await database;
+    await _ensureDefaultSettings(db);
+    final result = await db.query('app_settings', limit: 1);
+    if (result.isNotEmpty) {
+      return result.first;
+    }
+    return {
+      'id': 1,
+      'passwordEnabled': 0,
+      'password': null,
+    };
+  }
+
+  Future<bool> isPasswordProtectionEnabled() async {
+    final settings = await getAppSettings();
+    final rawValue = settings['passwordEnabled'];
+    if (rawValue is int) {
+      return rawValue == 1;
+    }
+    if (rawValue is bool) {
+      return rawValue;
+    }
+    return false;
+  }
+
+  Future<String?> getAppPassword() async {
+    final settings = await getAppSettings();
+    final stored = settings['password'];
+    if (stored is String) {
+      return stored;
+    }
+    return null;
+  }
+
+  Future<void> updatePasswordProtection({required bool enabled, String? password}) async {
+    final db = await database;
+    await _ensureDefaultSettings(db);
+    await db.update(
+      'app_settings',
+      {
+        'passwordEnabled': enabled ? 1 : 0,
+        'password': enabled ? password : null,
+      },
+      where: 'id = ?',
+      whereArgs: const [1],
+    );
+  }
+
+  Future<void> updateStoredPassword(String? password) async {
+    final db = await database;
+    await _ensureDefaultSettings(db);
+    await db.update(
+      'app_settings',
+      {
+        'password': password,
+      },
+      where: 'id = ?',
+      whereArgs: const [1],
+    );
+  }
+
+  Future<void> _ensureDefaultSettings(Database db) async {
+    final current = await db.query('app_settings', limit: 1);
+    if (current.isEmpty) {
+      await db.insert(
+        'app_settings',
+        {
+          'id': 1,
+          'passwordEnabled': 0,
+          'password': null,
+        },
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+    }
   }
 
   Future close() async {

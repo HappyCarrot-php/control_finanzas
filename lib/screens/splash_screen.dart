@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/settings_provider.dart';
 import '../theme/app_theme.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -32,10 +34,13 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     _controller.forward();
 
     // Navegar al dashboard después de 2.5 segundos
-    Future.delayed(const Duration(milliseconds: 2500), () {
-      if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/dashboard');
-      }
+    Future.delayed(const Duration(milliseconds: 2500), () async {
+      if (!mounted) return;
+      final settings = context.read<SettingsProvider>();
+      await settings.ensureInitialized();
+      if (!mounted) return;
+      final nextRoute = settings.passwordProtectionEnabled ? '/password-lock' : '/dashboard';
+      Navigator.of(context).pushReplacementNamed(nextRoute);
     });
   }
 
@@ -50,13 +55,13 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
+          gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              const Color(0xFF0F2027),
-              const Color(0xFF203A43),
-              const Color(0xFF2C5364),
+              AppTheme.backgroundDark,
+              AppTheme.chromeBlack,
+              AppTheme.backgroundCard,
             ],
           ),
         ),

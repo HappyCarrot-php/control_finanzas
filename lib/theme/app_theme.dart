@@ -56,6 +56,62 @@ class AppTheme {
         ),
         iconTheme: IconThemeData(color: chromeLight),
       ),
+
+      tabBarTheme: const TabBarThemeData(
+        labelColor: silverBright,
+        unselectedLabelColor: chromeMedium,
+        indicatorSize: TabBarIndicatorSize.label,
+        indicatorColor: accentBlue,
+      ),
+
+      drawerTheme: const DrawerThemeData(
+        backgroundColor: backgroundDark,
+        scrimColor: Colors.black54,
+      ),
+
+      listTileTheme: const ListTileThemeData(
+        iconColor: chromeLight,
+        textColor: chromeLight,
+      ),
+
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return accentGreen;
+          }
+          return chromeMedium;
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return accentGreen.withOpacity(0.4);
+          }
+          return chromeMedium.withOpacity(0.3);
+        }),
+      ),
+
+      dialogTheme: DialogThemeData(
+        backgroundColor: backgroundCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        titleTextStyle: const TextStyle(
+          color: chromeLight,
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+        ),
+        contentTextStyle: const TextStyle(
+          color: chromeMedium,
+          fontSize: 14,
+        ),
+      ),
+
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: backgroundCardLight,
+        contentTextStyle: const TextStyle(
+          color: chromeLight,
+          fontSize: 14,
+        ),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
       
       cardTheme: CardThemeData(
         color: backgroundCard,
