@@ -7,15 +7,19 @@ import '../models/transaction.dart';
 import '../models/subcategory.dart';
 import '../providers/finance_provider.dart';
 import '../theme/app_theme.dart';
+import '../utils/format_utils.dart';
+import 'movements_screen.dart';
 
 class AddTransactionScreen extends StatefulWidget {
   final FinancialCategory? preselectedCategory;
   final FinancialTransaction? transactionToEdit;
+  final String initialType;
 
   const AddTransactionScreen({
     super.key,
     this.preselectedCategory,
     this.transactionToEdit,
+    this.initialType = 'income',
   });
 
   @override
@@ -26,32 +30,73 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _interestRateController = TextEditingController();
 
   FinancialCategory? _selectedCategory;
   Subcategory? _selectedSubcategory;
-  FinancialTransaction? _selectedIncomeSource; // Para gastos: de qué ingreso sacar
   String _transactionType = 'income';
   DateTime _selectedDate = DateTime.now();
   bool _isLoading = false;
+  bool _excludeFromTotal = false;
+  bool _didHydrateFromExisting = false;
+  bool _isInterestBearingTransaction = false;
 
   @override
   void initState() {
     super.initState();
     _selectedCategory = widget.preselectedCategory;
+    _transactionType = widget.transactionToEdit?.type ?? widget.initialType;
 
     if (widget.transactionToEdit != null) {
       final transaction = widget.transactionToEdit!;
       _amountController.text = transaction.amount.toString();
       _descriptionController.text = transaction.description;
-      _transactionType = transaction.type;
       _selectedDate = transaction.date;
+      _excludeFromTotal = transaction.excludeFromTotal;
+      _isInterestBearingTransaction =
+          transaction.type == 'income' && transaction.isInterestBearing;
+      if (transaction.interestRate > 0) {
+        _interestRateController.text = transaction.interestRate.toStringAsFixed(2);
+      }
     }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_didHydrateFromExisting || widget.transactionToEdit == null) {
+      return;
+    }
+
+    final provider = context.read<FinanceProvider>();
+    final transaction = widget.transactionToEdit!;
+
+    if (_selectedCategory == null) {
+      final matchingCategory = provider.categories
+          .where((category) => category.id == transaction.categoryId)
+          .toList();
+      if (matchingCategory.isNotEmpty) {
+        _selectedCategory = matchingCategory.first;
+      }
+    }
+
+    if (transaction.subcategoryId != null && _selectedSubcategory == null) {
+      final matchingSubcategory = provider.subcategories
+          .where((subcategory) => subcategory.id == transaction.subcategoryId)
+          .toList();
+      if (matchingSubcategory.isNotEmpty) {
+        _selectedSubcategory = matchingSubcategory.first;
+      }
+    }
+
+    _didHydrateFromExisting = true;
   }
 
   @override
   void dispose() {
     _amountController.dispose();
     _descriptionController.dispose();
+    _interestRateController.dispose();
     super.dispose();
   }
 
@@ -131,7 +176,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                             setState(() {
                               _selectedCategory = value;
                               _selectedSubcategory = null; // Reset subcategory cuando cambia categoría
-                              _selectedIncomeSource = null; // Reset apartado cuando cambia categoría
                             });
                           }
                         : null,
@@ -141,175 +185,156 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
               const SizedBox(height: 24),
 
-              // Selector de apartado/movimiento según tipo de transacción
+              // Selector de movimiento vinculable
               if (_selectedCategory != null) ...[
-                // Para INGRESOS: selector de subcategorías (movimientos)
-                if (_transactionType == 'income') ...[
-                  Row(
-                    children: [
-                      Text(
-                        'Movimiento',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const Spacer(),
-                      TextButton.icon(
-                        onPressed: () => _showAddSubcategoryDialog(context),
-                        icon: const Icon(Icons.add, size: 18),
-                        label: const Text('Agregar'),
-                        style: TextButton.styleFrom(
-                          foregroundColor: AppTheme.accentGreen,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    decoration: AppTheme.chromeContainer(),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    child: DropdownButtonHideUnderline(
-                      child: Consumer<FinanceProvider>(
-                        builder: (context, provider, child) {
-                          final subcategories = provider.getSubcategoriesByCategory(_selectedCategory!.id!);
-                          
-                          if (subcategories.isEmpty) {
-                            return const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 16),
-                              child: Text(
-                                'No hay movimientos. Agrega uno.',
-                                style: TextStyle(color: Colors.grey, fontSize: 14),
-                              ),
-                            );
-                          }
-
-                          return DropdownButton<Subcategory>(
-                            value: _selectedSubcategory,
-                            isExpanded: true,
-                            dropdownColor: AppTheme.backgroundCard,
-                            icon: const Icon(Icons.arrow_drop_down, color: AppTheme.chromeMedium),
-                            style: const TextStyle(color: AppTheme.chromeLight, fontSize: 16),
-                            hint: const Text('Selecciona un movimiento'),
-                            items: subcategories.map((subcategory) {
-                              final color = subcategory.color != null 
-                                  ? Color(int.parse(subcategory.color!, radix: 16))
-                                  : AppTheme.chromeMedium;
-                              return DropdownMenuItem<Subcategory>(
-                                value: subcategory,
-                                child: Row(
-                                  children: [
-                                    if (subcategory.icon != null)
-                                      Icon(
-                                        _getIconData(subcategory.icon!),
-                                        color: color,
-                                        size: 20,
-                                      )
-                                    else
-                                      Icon(Icons.account_balance_wallet, color: color, size: 20),
-                                    const SizedBox(width: 12),
-                                    Expanded(child: Text(subcategory.name)),
-                                    Text(
-                                      '\$${subcategory.balance.toStringAsFixed(2)}',
-                                      style: TextStyle(
-                                        color: subcategory.balance >= 0 ? AppTheme.accentGreen : AppTheme.accentRed,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }).toList(),
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedSubcategory = value;
-                              });
-                            },
-                          );
-                        },
+                Row(
+                  children: [
+                    Text(
+                      _transactionType == 'income'
+                          ? 'Movimiento destino'
+                          : 'Movimiento origen',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      tooltip: 'Gestionar movimientos',
+                      icon: const Icon(Icons.tune, size: 20, color: AppTheme.chromeMedium),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const MovementsScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    TextButton.icon(
+                      onPressed: () => _showAddSubcategoryDialog(context),
+                      icon: const Icon(Icons.add, size: 18),
+                      label: const Text('Nuevo'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppTheme.accentBlue,
                       ),
                     ),
-                  ),
-                ],
-                // Para GASTOS: selector de apartados (ingresos existentes)
-                if (_transactionType == 'expense') ...[
-                  Text(
-                    'Seleccionar Apartado',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    decoration: AppTheme.chromeContainer(),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    child: DropdownButtonHideUnderline(
-                      child: Consumer<FinanceProvider>(
-                        builder: (context, provider, child) {
-                          // Obtener transacciones de ingreso de la categoría seleccionada
-                          final incomeTransactions = provider.transactions
-                              .where((t) => t.type == 'income' && t.categoryId == _selectedCategory!.id)
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  decoration: AppTheme.chromeContainer(),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  child: DropdownButtonHideUnderline(
+                    child: Consumer<FinanceProvider>(
+                      builder: (context, provider, child) {
+                        final subcategories = provider.getSubcategoriesByCategory(_selectedCategory!.id!);
+
+                        if (_selectedSubcategory != null) {
+                          final refreshed = subcategories
+                              .where((subcategory) => subcategory.id == _selectedSubcategory!.id)
                               .toList();
-                          
-                          if (incomeTransactions.isEmpty) {
-                            return const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 16),
-                              child: Text(
-                                'No hay ingresos registrados en esta categoría',
-                                style: TextStyle(color: Colors.grey, fontSize: 14),
+                          if (refreshed.isEmpty) {
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (!mounted) return;
+                              setState(() {
+                                _selectedSubcategory = null;
+                              });
+                            });
+                          } else if (!identical(refreshed.first, _selectedSubcategory)) {
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (!mounted) return;
+                              setState(() {
+                                _selectedSubcategory = refreshed.first;
+                              });
+                            });
+                          }
+                        }
+
+                        if (subcategories.isEmpty) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    'No hay movimientos en esta categoría.',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(color: AppTheme.chromeMedium),
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: () => _showAddSubcategoryDialog(context),
+                                  child: const Text('Crear'),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+
+                        return DropdownButton<Subcategory>(
+                          value: _selectedSubcategory,
+                          isExpanded: true,
+                          dropdownColor: AppTheme.backgroundCard,
+                          icon: const Icon(Icons.arrow_drop_down, color: AppTheme.chromeMedium),
+                          style: const TextStyle(color: AppTheme.chromeLight, fontSize: 16),
+                          hint: Text(
+                            _transactionType == 'income'
+                                ? 'Selecciona dónde depositar'
+                                : 'Selecciona de dónde debitar',
+                          ),
+                          items: subcategories.map((subcategory) {
+                            Color accentColor;
+                            if (subcategory.color != null) {
+                              try {
+                                accentColor = Color(int.parse(subcategory.color!, radix: 16));
+                              } catch (_) {
+                                accentColor = AppTheme.chromeMedium;
+                              }
+                            } else {
+                              accentColor = AppTheme.chromeMedium;
+                            }
+
+                            return DropdownMenuItem<Subcategory>(
+                              value: subcategory,
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    subcategory.icon != null
+                                        ? _getIconData(subcategory.icon!)
+                                        : Icons.account_balance_wallet,
+                                    color: accentColor,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      subcategory.name,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  Text(
+                                    FormatUtils.formatCurrency(subcategory.balance),
+                                    style: TextStyle(
+                                      color: subcategory.balance >= 0
+                                          ? AppTheme.accentGreen
+                                          : AppTheme.accentRed,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
                               ),
                             );
-                          }
-
-                          return DropdownButton<FinancialTransaction?>(
-                            value: _selectedIncomeSource,
-                            isExpanded: true,
-                            dropdownColor: AppTheme.backgroundCard,
-                            icon: const Icon(Icons.arrow_drop_down, color: AppTheme.chromeMedium),
-                            style: const TextStyle(color: AppTheme.chromeLight, fontSize: 16),
-                            hint: const Text('Selecciona de dónde sacar (opcional)'),
-                            items: [
-                              const DropdownMenuItem<FinancialTransaction?>(
-                                value: null,
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.layers_clear, color: AppTheme.chromeMedium, size: 20),
-                                    SizedBox(width: 12),
-                                    Text('General - Sin apartado específico'),
-                                  ],
-                                ),
-                              ),
-                              ...incomeTransactions.map((income) {
-                                return DropdownMenuItem<FinancialTransaction?>(
-                                  value: income,
-                                  child: Row(
-                                    children: [
-                                      const Icon(Icons.account_balance_wallet, color: AppTheme.accentGreen, size: 20),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Text(
-                                          income.description,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                      Text(
-                                        '\$${income.amount.toStringAsFixed(2)}',
-                                        style: const TextStyle(
-                                          color: AppTheme.accentGreen,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              }),
-                            ],
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedIncomeSource = value;
-                              });
-                            },
-                          );
-                        },
-                      ),
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedSubcategory = value;
+                            });
+                          },
+                        );
+                      },
                     ),
                   ),
-                ],
+                ),
                 const SizedBox(height: 24),
               ],
 
@@ -337,14 +362,97 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   if (double.tryParse(value) == null) {
                     return 'Ingresa un monto válido';
                   }
-                  if (double.parse(value) <= 0) {
-                    return 'El monto debe ser mayor a 0';
+                  if (double.parse(value) < 0) {
+                    return 'El monto no puede ser negativo';
                   }
                   return null;
                 },
               ),
 
               const SizedBox(height: 24),
+
+              // Opción para excluir del capital total
+              Container(
+                decoration: AppTheme.chromeContainer(withGradient: false),
+                child: CheckboxListTile(
+                  value: _excludeFromTotal,
+                  onChanged: (value) {
+                    setState(() {
+                      _excludeFromTotal = value ?? false;
+                    });
+                  },
+                  controlAffinity: ListTileControlAffinity.leading,
+                  title: const Text('No sumar al capital total'),
+                  subtitle: const Text(
+                    'Útil para registros informativos o montos que no afectan tu capital principal.',
+                  ),
+                  activeColor: AppTheme.accentBlue,
+                  checkColor: Colors.white,
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              if (_transactionType == 'income') ...[
+                Container(
+                  decoration: AppTheme.chromeContainer(withGradient: false),
+                  child: Column(
+                    children: [
+                      SwitchListTile.adaptive(
+                        value: _isInterestBearingTransaction,
+                        onChanged: (value) {
+                          setState(() {
+                            _isInterestBearingTransaction = value;
+                            if (!value) {
+                              _interestRateController.clear();
+                            } else {
+                              final currentRate = _selectedSubcategory?.interestRate ?? 0;
+                              if (_interestRateController.text.isEmpty && currentRate > 0) {
+                                _interestRateController.text = currentRate.toStringAsFixed(2);
+                              }
+                            }
+                          });
+                        },
+                        title: const Text('Interés compuesto diario'),
+                        subtitle: const Text(
+                          'Aplica el GAT anual de la cuenta automáticamente cada día a las 12:00.',
+                        ),
+                        activeColor: AppTheme.accentBlue,
+                      ),
+                      if (_isInterestBearingTransaction)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                          child: TextFormField(
+                            controller: _interestRateController,
+                            decoration: const InputDecoration(
+                              labelText: 'GAT anual (%)',
+                              prefixIcon: Icon(Icons.percent),
+                              helperText: 'Ejemplo: 13',
+                            ),
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,4}')),
+                            ],
+                            validator: (value) {
+                              if (!_isInterestBearingTransaction) {
+                                return null;
+                              }
+                              final sanitized = value?.replaceAll('%', '').replaceAll(',', '.').trim();
+                              final parsed = sanitized != null && sanitized.isNotEmpty
+                                  ? double.tryParse(sanitized)
+                                  : null;
+                              if (parsed == null || parsed <= 0) {
+                                return 'Ingresa una tasa anual válida';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+              ],
 
               // Campo de descripción
               Text(
@@ -441,7 +549,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         setState(() {
           _transactionType = type;
           _selectedSubcategory = null; // Reset al cambiar tipo
-          _selectedIncomeSource = null; // Reset al cambiar tipo
+          if (type != 'income') {
+            _isInterestBearingTransaction = false;
+            _interestRateController.clear();
+          }
         });
       },
       borderRadius: BorderRadius.circular(12),
@@ -547,30 +658,58 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     });
 
     try {
+      final amountValue = double.parse(_amountController.text);
+      final bool interestEnabled = _transactionType == 'income' && _isInterestBearingTransaction;
+      double interestRate = 0.0;
+
+      if (interestEnabled) {
+        if (_selectedSubcategory == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Selecciona un movimiento para aplicar interés.')),
+          );
+          setState(() {
+            _isLoading = false;
+          });
+          return;
+        }
+
+        final sanitized = _interestRateController.text
+            .replaceAll('%', '')
+            .replaceAll(',', '.')
+            .trim();
+        interestRate = double.tryParse(sanitized) ?? 0.0;
+
+        if (interestRate <= 0) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Ingresa un GAT anual válido mayor a 0.')),
+          );
+          setState(() {
+            _isLoading = false;
+          });
+          return;
+        }
+      }
+
       final transaction = FinancialTransaction(
         id: widget.transactionToEdit?.id,
         categoryId: _selectedCategory!.id!,
-        subcategoryId: _transactionType == 'income' 
-            ? _selectedSubcategory?.id // Para ingresos: ID de subcategoría
-            : _selectedIncomeSource?.id, // Para gastos: ID de transacción de ingreso
-        amount: double.parse(_amountController.text),
+        subcategoryId: _selectedSubcategory?.id,
+        amount: amountValue,
         description: _descriptionController.text.trim(),
         date: _selectedDate,
         type: _transactionType,
+        excludeFromTotal: _excludeFromTotal,
+        isInterestBearing: interestEnabled,
+        interestRate: interestRate,
+        interestLastApplied: interestEnabled
+            ? (widget.transactionToEdit?.interestLastApplied ?? DateTime.now())
+            : null,
       );
 
       final provider = context.read<FinanceProvider>();
       
       if (widget.transactionToEdit == null) {
         await provider.addTransaction(transaction);
-        // Actualizar balance de subcategoría si se seleccionó una (solo para ingresos)
-        if (_transactionType == 'income' && _selectedSubcategory != null) {
-          await provider.updateSubcategoryBalance(
-            _selectedSubcategory!.id!,
-            double.parse(_amountController.text),
-            _transactionType,
-          );
-        }
       } else {
         await provider.updateTransaction(transaction);
       }

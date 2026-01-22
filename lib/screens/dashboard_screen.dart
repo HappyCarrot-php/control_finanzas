@@ -10,6 +10,7 @@ import 'add_transaction_screen.dart';
 import 'transactions_history_screen.dart';
 import 'expenses_screen.dart';
 import 'shopping_cart_screen.dart';
+import 'actions_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -29,6 +30,31 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
       context.read<FinanceProvider>().loadData();
     });
   }
+    void _showActionsQuickMenu(BuildContext context) {
+      showModalBottomSheet(
+        context: context,
+        useSafeArea: true,
+        backgroundColor: AppTheme.backgroundCard,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (context) {
+          return Padding(
+            padding: const EdgeInsets.all(16),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  SizedBox(height: 8),
+                  ActionsSection(),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    }
+
 
   @override
   void dispose() {
@@ -153,9 +179,42 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                 ),
                 onTap: () {
                   Navigator.pop(context);
+                  _tabController.animateTo(0);
                 },
               ),
               
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.accentGold.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.bolt,
+                    color: AppTheme.accentGold,
+                  ),
+                ),
+                title: const Text(
+                  'Acciones',
+                  style: TextStyle(
+                    color: AppTheme.chromeLight,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                subtitle: const Text(
+                  'Atajos y herramientas rápidas',
+                  style: TextStyle(
+                    color: AppTheme.chromeMedium,
+                    fontSize: 12,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showActionsQuickMenu(context);
+                },
+              ),
+
               const Divider(color: AppTheme.chromeDark),
               
               // Historial

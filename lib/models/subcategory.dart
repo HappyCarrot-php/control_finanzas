@@ -7,6 +7,9 @@ class Subcategory {
   final String? color;
   final int order;
   final DateTime createdDate;
+  final bool isInterestBearing;
+  final double interestRate;
+  final DateTime? lastInterestApplied;
 
   Subcategory({
     this.id,
@@ -17,6 +20,9 @@ class Subcategory {
     this.color,
     this.order = 0,
     DateTime? createdDate,
+    this.isInterestBearing = false,
+    this.interestRate = 0.0,
+    this.lastInterestApplied,
   }) : createdDate = createdDate ?? DateTime.now();
 
   Map<String, dynamic> toMap() {
@@ -29,10 +35,14 @@ class Subcategory {
       'color': color,
       'order': order,
       'createdDate': createdDate.toIso8601String(),
+      'isInterestBearing': isInterestBearing ? 1 : 0,
+      'interestRate': interestRate,
+      'lastInterestApplied': lastInterestApplied?.toIso8601String(),
     };
   }
 
   factory Subcategory.fromMap(Map<String, dynamic> map) {
+    final dynamic lastInterestValue = map['lastInterestApplied'];
     return Subcategory(
       id: map['id'] as int?,
       categoryId: map['categoryId'] as int,
@@ -42,6 +52,11 @@ class Subcategory {
       color: map['color'] as String?,
       order: map['order'] as int? ?? 0,
       createdDate: DateTime.parse(map['createdDate'] as String),
+      isInterestBearing: _parseBool(map['isInterestBearing']),
+      interestRate: _parseDouble(map['interestRate']),
+      lastInterestApplied: lastInterestValue is String && lastInterestValue.isNotEmpty
+          ? DateTime.tryParse(lastInterestValue)
+          : null,
     );
   }
 
@@ -54,6 +69,9 @@ class Subcategory {
     String? color,
     int? order,
     DateTime? createdDate,
+    bool? isInterestBearing,
+    double? interestRate,
+    DateTime? lastInterestApplied,
   }) {
     return Subcategory(
       id: id ?? this.id,
@@ -64,6 +82,32 @@ class Subcategory {
       color: color ?? this.color,
       order: order ?? this.order,
       createdDate: createdDate ?? this.createdDate,
+      isInterestBearing: isInterestBearing ?? this.isInterestBearing,
+      interestRate: interestRate ?? this.interestRate,
+      lastInterestApplied: lastInterestApplied ?? this.lastInterestApplied,
     );
+  }
+
+  static bool _parseBool(dynamic value) {
+    if (value is int) {
+      return value == 1;
+    }
+    if (value is bool) {
+      return value;
+    }
+    return false;
+  }
+
+  static double _parseDouble(dynamic value) {
+    if (value is double) {
+      return value;
+    }
+    if (value is int) {
+      return value.toDouble();
+    }
+    if (value is String) {
+      return double.tryParse(value) ?? 0.0;
+    }
+    return 0.0;
   }
 }

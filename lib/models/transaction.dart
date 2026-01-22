@@ -6,6 +6,10 @@ class FinancialTransaction {
   final String description;
   final DateTime date;
   final String type; // 'income' o 'expense'
+  final bool excludeFromTotal;
+  final bool isInterestBearing;
+  final double interestRate;
+  final DateTime? interestLastApplied;
 
   FinancialTransaction({
     this.id,
@@ -15,6 +19,10 @@ class FinancialTransaction {
     required this.description,
     required this.date,
     required this.type,
+    this.excludeFromTotal = false,
+    this.isInterestBearing = false,
+    this.interestRate = 0.0,
+    this.interestLastApplied,
   });
 
   Map<String, dynamic> toMap() {
@@ -26,6 +34,10 @@ class FinancialTransaction {
       'description': description,
       'date': date.toIso8601String(),
       'type': type,
+      'excludeFromTotal': excludeFromTotal ? 1 : 0,
+      'isInterestBearing': isInterestBearing ? 1 : 0,
+      'interestRate': interestRate,
+      'interestLastApplied': interestLastApplied?.toIso8601String(),
     };
   }
 
@@ -38,6 +50,10 @@ class FinancialTransaction {
       description: map['description'],
       date: DateTime.parse(map['date']),
       type: map['type'],
+      excludeFromTotal: _parseExcludeFlag(map['excludeFromTotal']),
+      isInterestBearing: _parseExcludeFlag(map['isInterestBearing']),
+      interestRate: _parseRate(map['interestRate']),
+      interestLastApplied: _parseDate(map['interestLastApplied']),
     );
   }
 
@@ -49,6 +65,10 @@ class FinancialTransaction {
     String? description,
     DateTime? date,
     String? type,
+    bool? excludeFromTotal,
+    bool? isInterestBearing,
+    double? interestRate,
+    DateTime? interestLastApplied,
   }) {
     return FinancialTransaction(
       id: id ?? this.id,
@@ -58,6 +78,40 @@ class FinancialTransaction {
       description: description ?? this.description,
       date: date ?? this.date,
       type: type ?? this.type,
+      excludeFromTotal: excludeFromTotal ?? this.excludeFromTotal,
+      isInterestBearing: isInterestBearing ?? this.isInterestBearing,
+      interestRate: interestRate ?? this.interestRate,
+      interestLastApplied: interestLastApplied ?? this.interestLastApplied,
     );
+  }
+
+  static bool _parseExcludeFlag(dynamic value) {
+    if (value is int) {
+      return value == 1;
+    }
+    if (value is bool) {
+      return value;
+    }
+    return false;
+  }
+
+  static double _parseRate(dynamic value) {
+    if (value is double) {
+      return value;
+    }
+    if (value is int) {
+      return value.toDouble();
+    }
+    if (value is String) {
+      return double.tryParse(value) ?? 0.0;
+    }
+    return 0.0;
+  }
+
+  static DateTime? _parseDate(dynamic value) {
+    if (value is String && value.isNotEmpty) {
+      return DateTime.tryParse(value);
+    }
+    return null;
   }
 }

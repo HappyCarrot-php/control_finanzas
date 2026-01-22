@@ -75,8 +75,9 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              AppTheme.silverDark,
-              AppTheme.chromeMedium,
+              AppTheme.backgroundDark,
+              Color(0xFF202433),
+              AppTheme.backgroundCard,
             ],
           ),
         ),
@@ -87,12 +88,9 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               Expanded(
                 child: Container(
                   margin: const EdgeInsets.only(top: 20),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[50],
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(30),
-                      topRight: Radius.circular(30),
-                    ),
+                  decoration: AppTheme.chromeContainer(
+                    color: AppTheme.backgroundCard.withOpacity(0.96),
+                    borderRadius: 28,
                   ),
                   child: Column(
                     children: [
@@ -104,16 +102,16 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                           children: [
                             Text(
                               'Gastos Recurrentes',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey[800],
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.chromeLight,
                               ),
                             ),
                             IconButton(
                               icon: const Icon(Icons.history),
                               onPressed: () => _showExpensesHistory(context),
-                              color: AppTheme.accentBlue,
+                              color: AppTheme.chromeMedium,
                             ),
                           ],
                         ),
@@ -146,11 +144,11 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            icon: const Icon(Icons.arrow_back, color: AppTheme.chromeLight),
             onPressed: () => Navigator.pop(context),
           ),
           const SizedBox(width: 10),
@@ -162,14 +160,15 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: AppTheme.chromeLight,
                 ),
               ),
+              SizedBox(height: 4),
               Text(
                 'Registra tus gastos recurrentes',
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.white70,
+                  color: AppTheme.chromeMedium,
                 ),
               ),
             ],
@@ -184,20 +183,29 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       onTap: () => _showExpenseDialog(template),
       child: Container(
         decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(22),
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              template['color'].withOpacity(0.8),
-              template['color'],
+              (template['color'] as Color).withOpacity(0.35),
+              AppTheme.backgroundCard,
             ],
           ),
-          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: (template['color'] as Color).withOpacity(0.45),
+            width: 1,
+          ),
           boxShadow: [
             BoxShadow(
-              color: template['color'].withOpacity(0.3),
+              color: Colors.black.withOpacity(0.35),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
+            ),
+            BoxShadow(
+              color: AppTheme.silverBright.withOpacity(0.06),
               blurRadius: 10,
-              offset: const Offset(0, 5),
+              offset: const Offset(-3, -3),
             ),
           ],
         ),
@@ -214,13 +222,13 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                   Container(
                     padding: const EdgeInsets.all(15),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.3),
+                      color: Colors.white.withOpacity(0.12),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       template['icon'],
                       size: 40,
-                      color: Colors.white,
+                      color: AppTheme.chromeLight,
                     ),
                   ),
                   const SizedBox(height: 15),
@@ -229,7 +237,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: AppTheme.chromeLight,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -238,7 +246,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     FormatUtils.formatCurrency(template['defaultAmount']),
                     style: const TextStyle(
                       fontSize: 16,
-                      color: Colors.white70,
+                      color: AppTheme.chromeMedium,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -247,6 +255,31 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  InputDecoration _dialogInputDecoration({
+    required String label,
+    IconData? icon,
+  }) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: const TextStyle(color: AppTheme.chromeMedium),
+      prefixIcon: icon != null ? Icon(icon, color: AppTheme.accentBlue) : null,
+      filled: true,
+      fillColor: AppTheme.backgroundCardLight,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(18),
+        borderSide: BorderSide(color: AppTheme.chromeMedium.withOpacity(0.3)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(18),
+        borderSide: BorderSide(color: AppTheme.chromeMedium.withOpacity(0.3)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(18),
+        borderSide: const BorderSide(color: AppTheme.accentBlue, width: 2),
       ),
     );
   }
@@ -274,6 +307,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                 : <FinancialTransaction>[];
 
             return AlertDialog(
+              backgroundColor: AppTheme.backgroundCard,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
@@ -282,7 +316,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: template['color'].withOpacity(0.2),
+                      color: (template['color'] as Color).withOpacity(0.2),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -295,6 +329,10 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     child: Text(
                       'Registrar ${template['name']}',
                       overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppTheme.chromeLight,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
@@ -304,25 +342,34 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Selector de categoría
                     const Text(
                       'Categoría',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black87),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: AppTheme.chromeLight,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       decoration: BoxDecoration(
-                        color: Colors.grey[100],
-                        borderRadius: BorderRadius.circular(15),
-                        border: Border.all(color: Colors.grey[300]!),
+                        color: AppTheme.backgroundCardLight,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: AppTheme.chromeMedium.withOpacity(0.35),
+                        ),
                       ),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<FinancialCategory>(
                           value: selectedCategory,
                           isExpanded: true,
-                          style: const TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.w500),
-                          dropdownColor: Colors.white,
+                          style: const TextStyle(
+                            color: AppTheme.chromeLight,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          dropdownColor: AppTheme.backgroundCardLight,
                           items: provider.categories.map((cat) {
                             final color = Color(int.parse(cat.color, radix: 16));
                             return DropdownMenuItem(
@@ -340,7 +387,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                                   const SizedBox(width: 10),
                                   Text(
                                     cat.name,
-                                    style: const TextStyle(color: Colors.black87),
+                                    style: const TextStyle(color: AppTheme.chromeLight),
                                   ),
                                 ],
                               ),
@@ -356,43 +403,55 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                       ),
                     ),
                     const SizedBox(height: 15),
-                    // Selector de ingreso - Mostrar transacciones de ingreso existentes
                     const Text(
                       'De dónde sacar el dinero',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black87),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: AppTheme.chromeLight,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       decoration: BoxDecoration(
-                        color: Colors.grey[100],
-                        borderRadius: BorderRadius.circular(15),
-                        border: Border.all(color: Colors.grey[300]!),
+                        color: AppTheme.backgroundCardLight,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: AppTheme.chromeMedium.withOpacity(0.35),
+                        ),
                       ),
                       child: incomeTransactions.isEmpty
                           ? Padding(
                               padding: const EdgeInsets.all(12.0),
                               child: Text(
                                 'No hay ingresos registrados en esta categoría',
-                                style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                                style: const TextStyle(
+                                  color: AppTheme.chromeMedium,
+                                  fontSize: 14,
+                                ),
                               ),
                             )
                           : DropdownButtonHideUnderline(
                               child: DropdownButton<FinancialTransaction?>(
                                 value: selectedIncomeTransaction,
                                 isExpanded: true,
-                                style: const TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.w500),
-                                dropdownColor: Colors.white,
+                                style: const TextStyle(
+                                  color: AppTheme.chromeLight,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                dropdownColor: AppTheme.backgroundCardLight,
                                 hint: const Text(
                                   'Seleccionar origen (opcional)',
-                                  style: TextStyle(color: Colors.black54),
+                                  style: TextStyle(color: AppTheme.chromeMedium),
                                 ),
                                 items: [
                                   const DropdownMenuItem(
                                     value: null,
                                     child: Text(
                                       'General - Sin origen específico',
-                                      style: TextStyle(color: Colors.black87),
+                                      style: TextStyle(color: AppTheme.chromeLight),
                                     ),
                                   ),
                                   ...incomeTransactions.map((income) {
@@ -400,7 +459,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                                       value: income,
                                       child: Text(
                                         '${income.description} (${FormatUtils.formatCurrency(income.amount)})',
-                                        style: const TextStyle(color: Colors.black87),
+                                        style: const TextStyle(color: AppTheme.chromeLight),
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     );
@@ -417,33 +476,27 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     const SizedBox(height: 15),
                     TextField(
                       controller: amountController,
-                      decoration: InputDecoration(
-                        labelText: 'Monto (MXN)',
-                        labelStyle: const TextStyle(color: Colors.black87),
-                        prefixIcon: const Icon(Icons.attach_money, color: Colors.black87),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey[100],
+                      decoration: _dialogInputDecoration(
+                        label: 'Monto (MXN)',
+                        icon: Icons.attach_money,
                       ),
-                      style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
+                      style: const TextStyle(
+                        color: AppTheme.chromeLight,
+                        fontWeight: FontWeight.w600,
+                      ),
                       keyboardType: TextInputType.number,
                     ),
                     const SizedBox(height: 15),
                     TextField(
                       controller: notesController,
-                      decoration: InputDecoration(
-                        labelText: 'Notas (opcional)',
-                        labelStyle: const TextStyle(color: Colors.black87),
-                        prefixIcon: const Icon(Icons.note_outlined, color: Colors.black87),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey[100],
+                      decoration: _dialogInputDecoration(
+                        label: 'Notas (opcional)',
+                        icon: Icons.note_outlined,
                       ),
-                      style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w500),
+                      style: const TextStyle(
+                        color: AppTheme.chromeLight,
+                        fontWeight: FontWeight.w500,
+                      ),
                       maxLines: 2,
                     ),
                     const SizedBox(height: 15),
@@ -457,9 +510,12 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                           builder: (context, child) {
                             return Theme(
                               data: Theme.of(context).copyWith(
-                                colorScheme: ColorScheme.light(
+                                colorScheme: ColorScheme.dark(
                                   primary: template['color'],
+                                  surface: AppTheme.backgroundCard,
+                                  onSurface: AppTheme.chromeLight,
                                 ),
+                                dialogBackgroundColor: AppTheme.backgroundCard,
                               ),
                               child: child!,
                             );
@@ -472,11 +528,13 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                         }
                       },
                       child: Container(
-                        padding: const EdgeInsets.all(15),
+                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.grey[100],
-                          borderRadius: BorderRadius.circular(15),
-                          border: Border.all(color: Colors.grey[300]!),
+                          color: AppTheme.backgroundCardLight,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(
+                            color: AppTheme.chromeMedium.withOpacity(0.35),
+                          ),
                         ),
                         child: Row(
                           children: [
@@ -484,7 +542,10 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                             const SizedBox(width: 15),
                             Text(
                               DateFormat('dd/MM/yyyy').format(selectedDate),
-                              style: const TextStyle(fontSize: 16),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: AppTheme.chromeLight,
+                              ),
                             ),
                           ],
                         ),
@@ -496,6 +557,9 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppTheme.chromeLight,
+                  ),
                   child: const Text('Cancelar'),
                 ),
                 ElevatedButton(
@@ -594,12 +658,19 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         height: MediaQuery.of(context).size.height * 0.8,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
+        decoration: BoxDecoration(
+          color: AppTheme.backgroundCard,
+          borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(30),
             topRight: Radius.circular(30),
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.4),
+              blurRadius: 20,
+              offset: const Offset(0, -8),
+            ),
+          ],
         ),
         child: Column(
           children: [
@@ -608,7 +679,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppTheme.chromeMedium.withOpacity(0.4),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -619,17 +690,17 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                 children: [
                   Text(
                     'Historial de Gastos',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey[800],
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.chromeLight,
                     ),
                   ),
                   Text(
                     '${expenseTransactions.length} registros',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 14,
-                      color: Colors.grey[600],
+                      color: AppTheme.chromeMedium,
                     ),
                   ),
                 ],
@@ -644,14 +715,14 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                           Icon(
                             Icons.receipt_long_outlined,
                             size: 80,
-                            color: Colors.grey[300],
+                            color: AppTheme.chromeDark.withOpacity(0.35),
                           ),
                           const SizedBox(height: 20),
                           Text(
                             'No hay gastos registrados',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 18,
-                              color: Colors.grey[600],
+                              color: AppTheme.chromeMedium,
                             ),
                           ),
                         ],
@@ -694,7 +765,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                           background: Container(
                             margin: const EdgeInsets.only(bottom: 10),
                             decoration: BoxDecoration(
-                              color: Colors.red,
+                              color: AppTheme.accentRed,
                               borderRadius: BorderRadius.circular(15),
                             ),
                             alignment: Alignment.centerRight,
@@ -717,13 +788,16 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                           child: Container(
                             margin: const EdgeInsets.only(bottom: 10),
                             decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(15),
+                              color: AppTheme.backgroundCardLight,
+                              borderRadius: BorderRadius.circular(18),
+                              border: Border.all(
+                                color: AppTheme.chromeMedium.withOpacity(0.2),
+                              ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.grey.withOpacity(0.1),
-                                  blurRadius: 5,
-                                  offset: const Offset(0, 3),
+                                  color: Colors.black.withOpacity(0.25),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 6),
                                 ),
                               ],
                             ),
@@ -732,7 +806,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                               leading: Container(
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
-                                  color: template['color'].withOpacity(0.2),
+                                  color: template['color'].withOpacity(0.18),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(
@@ -744,6 +818,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                                 template['name'],
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
+                                  color: AppTheme.chromeLight,
                                 ),
                               ),
                               subtitle: Column(
@@ -754,7 +829,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                                       transaction.description,
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: Colors.grey[600],
+                                        color: AppTheme.chromeMedium,
                                       ),
                                     ),
                                   const SizedBox(height: 4),
@@ -763,9 +838,9 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                                       transaction.date,
                                       includeTime: false,
                                     ),
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontSize: 11,
-                                      color: Colors.grey[500],
+                                      color: AppTheme.chromeMedium,
                                     ),
                                   ),
                                 ],

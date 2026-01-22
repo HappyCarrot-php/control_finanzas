@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../providers/settings_provider.dart';
 import '../theme/app_theme.dart';
 
@@ -10,10 +11,13 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _opacityAnimation;
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _scaleAnimation;
+  late final Animation<double> _opacityAnimation;
+  late final AnimationController _pulseController;
+  late final Animation<double> _pulseAnimation;
 
   @override
   void initState() {
@@ -23,9 +27,19 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       vsync: this,
     );
 
-    _scaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.elasticOut),
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 1800),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _pulseAnimation = Tween<double>(begin: 0.94, end: 1.06).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
+
+    _scaleAnimation = Tween<double>(
+      begin: 0.5,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.elasticOut));
 
     _opacityAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.5)),
@@ -33,13 +47,14 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
     _controller.forward();
 
-    // Navegar al dashboard después de 2.5 segundos
     Future.delayed(const Duration(milliseconds: 2500), () async {
       if (!mounted) return;
       final settings = context.read<SettingsProvider>();
       await settings.ensureInitialized();
       if (!mounted) return;
-      final nextRoute = settings.passwordProtectionEnabled ? '/password-lock' : '/dashboard';
+      final nextRoute = settings.passwordProtectionEnabled
+          ? '/password-lock'
+          : '/dashboard';
       Navigator.of(context).pushReplacementNamed(nextRoute);
     });
   }
@@ -47,6 +62,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   void dispose() {
     _controller.dispose();
+    _pulseController.dispose();
     super.dispose();
   }
 
@@ -54,310 +70,108 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
+              Color(0xFF0B1D3C),
+              Color(0xFF15294C),
               AppTheme.backgroundDark,
-              AppTheme.chromeBlack,
-              AppTheme.backgroundCard,
             ],
           ),
         ),
         child: Stack(
           children: [
-            // Partículas brillantes de fondo
             Positioned(
-              top: 100,
-              left: 50,
-              child: _buildGlowDot(12, AppTheme.accentBlue.withOpacity(0.4)),
+              top: -140,
+              right: -80,
+              child: _buildBackdropCircle(
+                280,
+                AppTheme.accentBlue.withValues(alpha: 0.18),
+              ),
             ),
             Positioned(
-              top: 200,
-              right: 80,
-              child: _buildGlowDot(8, AppTheme.accentOrange.withOpacity(0.5)),
+              bottom: -160,
+              left: -60,
+              child: _buildBackdropCircle(
+                260,
+                AppTheme.accentOrange.withValues(alpha: 0.12),
+              ),
             ),
             Positioned(
-              bottom: 150,
-              left: 100,
-              child: _buildGlowDot(10, AppTheme.silverBright.withOpacity(0.3)),
+              top: 120,
+              left: -40,
+              child: _buildBackdropCircle(
+                180,
+                AppTheme.chromeMedium.withValues(alpha: 0.08),
+              ),
             ),
             Positioned(
-              bottom: 250,
-              right: 60,
-              child: _buildGlowDot(15, AppTheme.accentBlue.withOpacity(0.3)),
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                height: 220,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Colors.transparent, Color(0xFF10131C)],
+                  ),
+                ),
+              ),
             ),
-            Positioned(
-              top: 400,
-              left: 30,
-              child: _buildGlowDot(6, AppTheme.accentOrange.withOpacity(0.4)),
-            ),
-            
-            // Contenido principal
             Center(
               child: AnimatedBuilder(
                 animation: _controller,
                 builder: (context, child) {
-                  return Opacity(
-                    opacity: _opacityAnimation.value,
-                    child: Transform.scale(
-                      scale: _scaleAnimation.value,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          // Logo con múltiples capas y efectos 3D
-                          Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              // Resplandor exterior
-                              Container(
-                                width: 200,
-                                height: 200,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppTheme.accentBlue.withOpacity(0.4),
-                                      blurRadius: 60,
-                                      spreadRadius: 20,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              // Anillo decorativo exterior
-                              Container(
-                                width: 180,
-                                height: 180,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [
-                                      AppTheme.silverBright.withOpacity(0.2),
-                                      AppTheme.accentBlue.withOpacity(0.1),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              // Círculo principal con efecto metálico
-                              Container(
-                                width: 150,
-                                height: 150,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [
-                                      AppTheme.silverBright,
-                                      AppTheme.silverMedium,
-                                      AppTheme.silverDark,
-                                      AppTheme.chromeMedium,
-                                    ],
-                                    stops: const [0.0, 0.3, 0.6, 1.0],
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.5),
-                                      blurRadius: 25,
-                                      offset: const Offset(0, 12),
-                                    ),
-                                    BoxShadow(
-                                      color: AppTheme.silverBright.withOpacity(0.3),
-                                      blurRadius: 15,
-                                      offset: const Offset(-8, -8),
-                                    ),
-                                  ],
-                                ),
-                                child: Stack(
-                                  alignment: Alignment.center,
-                                  children: [
-                                    // Símbolo de dólar con efecto 3D
-                                    Transform.translate(
-                                      offset: const Offset(3, 3),
-                                      child: const Icon(
-                                        Icons.attach_money_rounded,
-                                        size: 90,
-                                        color: Color(0xFF1A1A1A),
-                                      ),
-                                    ),
-                                    // Símbolo de dólar principal con gradiente dorado
-                                    ShaderMask(
-                                      shaderCallback: (bounds) => LinearGradient(
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                        colors: [
-                                          const Color(0xFFFFD700),
-                                          const Color(0xFFFFA500),
-                                          const Color(0xFFFF8C00),
-                                        ],
-                                      ).createShader(bounds),
-                                      child: const Icon(
-                                        Icons.attach_money_rounded,
-                                        size: 90,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    // Brillo superior
-                                    Positioned(
-                                      top: 20,
-                                      left: 30,
-                                      child: Container(
-                                        width: 40,
-                                        height: 40,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          gradient: RadialGradient(
-                                            colors: [
-                                              Colors.white.withOpacity(0.6),
-                                              Colors.white.withOpacity(0.0),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              // Detalles decorativos alrededor
-                              Positioned(
-                                top: 10,
-                                right: 10,
-                                child: _buildSparkle(8),
-                              ),
-                              Positioned(
-                                bottom: 15,
-                                left: 15,
-                                child: _buildSparkle(6),
-                              ),
-                              Positioned(
-                                top: 30,
-                                left: 5,
-                                child: _buildSparkle(5),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 50),
-                          
-                          // Nombre de la app con efecto metálico premium
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: ShaderMask(
-                              shaderCallback: (bounds) => LinearGradient(
-                                colors: [
-                                  AppTheme.silverBright,
-                                  Colors.white,
-                                  AppTheme.silverLight,
-                                  AppTheme.silverMedium,
-                                  AppTheme.silverLight,
-                                  Colors.white,
-                                  AppTheme.silverBright,
-                                ],
-                                stops: const [0.0, 0.15, 0.3, 0.5, 0.7, 0.85, 1.0],
-                              ).createShader(bounds),
-                              child: const Text(
-                              'Control Financiero',
-                              style: TextStyle(
-                                fontSize: 38,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white,
-                                letterSpacing: 2,
-                                  shadows: [
-                                    Shadow(
-                                      color: Colors.black45,
-                                      offset: Offset(2, 2),
-                                      blurRadius: 4,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          
-                          // Subtítulo elegante con borde luminoso
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(25),
-                              gradient: LinearGradient(
-                                colors: [
-                                  AppTheme.accentBlue.withOpacity(0.3),
-                                  AppTheme.accentOrange.withOpacity(0.2),
-                                ],
-                              ),
-                              border: Border.all(
-                                color: AppTheme.silverMedium.withOpacity(0.5),
-                                width: 1.5,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppTheme.accentBlue.withOpacity(0.3),
-                                  blurRadius: 15,
-                                  spreadRadius: 2,
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.trending_up_rounded,
-                                  color: AppTheme.accentOrange,
-                                  size: 18,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Tu Dinero Bajo Control',
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    color: AppTheme.silverBright,
-                                    letterSpacing: 1.5,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 80),
-                          
-                          // Indicador de carga con efecto metálico
-                          Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              SizedBox(
-                                width: 55,
-                                height: 55,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 4,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    AppTheme.silverBright,
-                                  ),
-                                  backgroundColor: AppTheme.silverDark.withOpacity(0.3),
-                                ),
-                              ),
-                              Container(
-                                width: 35,
-                                height: 35,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  gradient: RadialGradient(
-                                    colors: [
-                                      AppTheme.accentBlue.withOpacity(0.6),
-                                      AppTheme.accentBlue.withOpacity(0.0),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                  final progress = _controller.value.clamp(0.0, 1.0);
+                  return _buildAnimatedContent(progress);
+                },
+              ),
+            ),
+            Positioned(
+              bottom: 48,
+              left: 32,
+              right: 32,
+              child: Row(
+                children: [
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: AppTheme.chromeMedium.withValues(alpha: 0.25),
+                      ),
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          AppTheme.backgroundCardLight,
+                          AppTheme.backgroundCard,
                         ],
                       ),
                     ),
-                  );
-                },
+                    child: const Icon(
+                      Icons.verified_user_outlined,
+                      color: AppTheme.chromeLight,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      'Sesión protegida. Personalizando indicadores para tu portafolio.',
+                      style: TextStyle(
+                        color: AppTheme.chromeMedium.withValues(alpha: 0.85),
+                        fontSize: 13,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -366,41 +180,239 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     );
   }
 
-  // Widget helper para puntos brillantes
-  Widget _buildGlowDot(double size, Color color) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: color,
-        boxShadow: [
-          BoxShadow(
-            color: color,
-            blurRadius: size * 2,
-            spreadRadius: size / 2,
+  Widget _buildAnimatedContent(double progress) {
+    return Opacity(
+      opacity: _opacityAnimation.value,
+      child: Transform.translate(
+        offset: Offset(0, (1 - _scaleAnimation.value) * 24),
+        child: Transform.scale(
+          scale: _scaleAnimation.value,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 320,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 36,
+                ),
+                decoration: BoxDecoration(
+                  color: AppTheme.backgroundCard.withValues(alpha: 0.95),
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(
+                    color: AppTheme.accentBlue.withValues(alpha: 0.25),
+                    width: 1.4,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.4),
+                      blurRadius: 32,
+                      offset: const Offset(0, 28),
+                    ),
+                    BoxShadow(
+                      color: AppTheme.accentBlue.withValues(alpha: 0.18),
+                      blurRadius: 18,
+                      offset: const Offset(0, 12),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Center(
+                      child: ScaleTransition(
+                        scale: _pulseAnimation,
+                        child: Container(
+                          width: 120,
+                          height: 120,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                AppTheme.accentBlue,
+                                AppTheme.accentOrange,
+                              ],
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppTheme.accentBlue.withValues(
+                                  alpha: 0.45,
+                                ),
+                                blurRadius: 24,
+                                spreadRadius: 2,
+                                offset: const Offset(0, 14),
+                              ),
+                            ],
+                          ),
+                          child: Container(
+                            margin: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Colors.white.withValues(alpha: 0.9),
+                                  Colors.white.withValues(alpha: 0.6),
+                                ],
+                              ),
+                            ),
+                            child: const Icon(
+                              Icons.savings_rounded,
+                              size: 48,
+                              color: AppTheme.chromeBlack,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    const Text(
+                      'Control Finanzas',
+                      style: TextStyle(
+                        color: AppTheme.chromeLight,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: AppTheme.accentBlue.withValues(alpha: 0.4),
+                        ),
+                        color: AppTheme.backgroundCardLight.withValues(
+                          alpha: 0.45,
+                        ),
+                      ),
+                      child: Text(
+                        'Tu dinero bajo control',
+                        style: TextStyle(
+                          color: AppTheme.chromeLight.withValues(alpha: 0.92),
+                          fontSize: 14,
+                          letterSpacing: 0.6,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(18),
+                        color: AppTheme.backgroundCardLight.withValues(
+                          alpha: 0.6,
+                        ),
+                        border: Border.all(
+                          color: AppTheme.chromeMedium.withValues(alpha: 0.15),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.shield_outlined,
+                            size: 18,
+                            color: AppTheme.accentBlue,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Inicializando seguridad biométrica y tablero principal',
+                              style: TextStyle(
+                                color: AppTheme.chromeLight.withValues(
+                                  alpha: 0.9,
+                                ),
+                                fontSize: 13,
+                                letterSpacing: 0.4,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 42),
+              _buildProgressSection(progress),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
-  // Widget helper para destellos decorativos
-  Widget _buildSparkle(double size) {
+  Widget _buildBackdropCircle(double size, Color color) {
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.white.withOpacity(0.8),
-            blurRadius: size * 3,
-            spreadRadius: size,
-          ),
-        ],
+        gradient: RadialGradient(colors: [color, color.withValues(alpha: 0.0)]),
       ),
+    );
+  }
+
+  Widget _buildProgressSection(double progress) {
+    final clamped = progress.clamp(0.0, 1.0);
+    final percentage = (clamped * 100).round();
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          'Sincronizando datos financieros',
+          style: TextStyle(
+            color: AppTheme.chromeLight.withValues(alpha: 0.85),
+            fontSize: 14,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          width: 240,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: AppTheme.backgroundCardLight.withValues(alpha: 0.45),
+              border: Border.all(
+                color: AppTheme.accentBlue.withValues(alpha: 0.25),
+              ),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: LinearProgressIndicator(
+                minHeight: 6,
+                value: clamped,
+                valueColor: const AlwaysStoppedAnimation<Color>(
+                  AppTheme.accentBlue,
+                ),
+                backgroundColor: AppTheme.chromeDark.withValues(alpha: 0.35),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          '$percentage% listo',
+          style: TextStyle(
+            color: AppTheme.chromeMedium.withValues(alpha: 0.85),
+            fontSize: 13,
+            letterSpacing: 0.4,
+          ),
+        ),
+      ],
     );
   }
 }

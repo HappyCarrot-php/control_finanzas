@@ -4,6 +4,7 @@ import '../providers/finance_provider.dart';
 import '../theme/app_theme.dart';
 import '../models/category.dart';
 import '../utils/format_utils.dart';
+import 'actions_screen.dart';
 import 'category_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -46,6 +47,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 16),
                 _buildCategoriesGrid(context, provider),
+                const SizedBox(height: 32),
+                Text(
+                  'Acciones rápidas',
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+                const SizedBox(height: 16),
+                const ActionsSection(),
               ],
             ),
           ),
@@ -58,7 +66,24 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
-      decoration: AppTheme.chromeContainer(borderRadius: 24),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [
+            AppTheme.chromeBlack,
+            AppTheme.chromeDeep,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -135,6 +160,15 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
+    final entries = provider.categories
+      .map((category) => MapEntry(category, provider.getCategoryBalance(category.id!)))
+      .toList();
+    entries.sort((a, b) => a.key.order.compareTo(b.key.order));
+    final totalAbsBalance = entries.fold<double>(
+      0,
+      (sum, entry) => sum + entry.value.abs(),
+    );
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -144,21 +178,37 @@ class _HomeScreenState extends State<HomeScreen> {
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
       ),
-      itemCount: provider.categories.length,
+      itemCount: entries.length,
       itemBuilder: (context, index) {
-        final category = provider.categories[index];
-        final balance = provider.getCategoryBalance(category.id!);
-        return _buildCategoryCard(context, category, balance);
+        final entry = entries[index];
+        return _buildCategoryCard(
+          context,
+          provider,
+          entry.key,
+          entry.value,
+          totalAbsBalance,
+        );
       },
     );
   }
 
   Widget _buildCategoryCard(
     BuildContext context,
+    FinanceProvider provider,
     FinancialCategory category,
     double balance,
+    double totalAbsBalance,
   ) {
     final color = Color(int.parse(category.color, radix: 16));
+    final isPositive = balance >= 0;
+    final categoryTransactions = provider.getTransactionsByCategory(category.id!);
+    final categoryMovements = provider.getSubcategoriesByCategory(category.id!);
+    final participation = totalAbsBalance == 0
+      ? 0.0
+      : (balance.abs() / totalAbsBalance).clamp(0.0, 1.0).toDouble();
+    final participationText = participation == 0
+        ? '0%'
+        : '${(participation * 100).toStringAsFixed(participation * 100 >= 10 ? 0 : 1)}%';
 
     return InkWell(
       onTap: () {
@@ -169,53 +219,143 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         );
       },
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(22),
       child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: AppTheme.chromeContainer(borderRadius: 20),
-        child: Padding(
-          padding: const EdgeInsets.all(0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  _getIconData(category.icon),
-                  color: color,
-                  size: 32,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                category.name.replaceAll('Cuentas Bancarias', 'Cuentas\nBancarias'),
-                style: const TextStyle(
-                  color: AppTheme.chromeLight,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                FormatUtils.formatCurrency(balance),
-                style: TextStyle(
-                  color: balance >= 0 ? AppTheme.accentGreen : AppTheme.accentRed,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(22),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppTheme.backgroundCard,
+              AppTheme.backgroundCardLight.withOpacity(0.88),
             ],
           ),
+          border: Border.all(color: color.withOpacity(0.35)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.28),
+              blurRadius: 18,
+              offset: const Offset(0, 12),
+            ),
+          ],
         ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [
+                        color.withOpacity(0.85),
+                        color,
+                      ],
+                    ),
+                  ),
+                  child: Icon(
+                    _getIconData(category.icon),
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.06),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    participationText,
+                    style: const TextStyle(
+                      color: AppTheme.chromeLight,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              category.name.replaceAll('Cuentas Bancarias', 'Cuentas\nBancarias'),
+              style: const TextStyle(
+                color: AppTheme.chromeLight,
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                height: 1.2,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              FormatUtils.formatCurrency(balance),
+              style: TextStyle(
+                color: isPositive ? AppTheme.accentGreen : AppTheme.accentRed,
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: LinearProgressIndicator(
+                value: participation,
+                minHeight: 6,
+                backgroundColor: Colors.white.withOpacity(0.12),
+                valueColor: AlwaysStoppedAnimation<Color>(color.withOpacity(0.85)),
+              ),
+            ),
+            const Spacer(),
+            Row(
+              children: [
+                _buildCategoryInfoChip(
+                  icon: Icons.account_balance_wallet_outlined,
+                  label: '${categoryMovements.length} mov',
+                ),
+                const SizedBox(width: 10),
+                _buildCategoryInfoChip(
+                  icon: Icons.swap_horiz,
+                  label: '${categoryTransactions.length} trans',
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryInfoChip({
+    required IconData icon,
+    required String label,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.06),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: AppTheme.chromeMedium, size: 14),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              color: AppTheme.chromeLight,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }

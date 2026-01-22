@@ -28,7 +28,48 @@ class FinanceProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      await _dbHelper.applyPendingInterest();
       _categories = await _dbHelper.readAllCategories();
+
+      bool categoriesUpdated = false;
+      if (!_categories.any((category) => category.name.toLowerCase() == 'acciones')) {
+        FinancialCategory? otrosActivos;
+        try {
+          otrosActivos = _categories.firstWhere((category) => category.name.toLowerCase() == 'otros activos');
+        } catch (_) {
+          otrosActivos = null;
+        }
+
+        var nextOrder = 1;
+        for (final category in _categories) {
+          if (category.order >= nextOrder) {
+            nextOrder = category.order + 1;
+          }
+        }
+
+        final accionesOrder = otrosActivos?.order ?? nextOrder;
+
+        await _dbHelper.createCategory(
+          FinancialCategory(
+            name: 'Acciones',
+            icon: 'show_chart',
+            color: 'FF5DADE2',
+            order: accionesOrder,
+          ),
+        );
+
+        if (otrosActivos != null && otrosActivos.order <= accionesOrder) {
+          await _dbHelper.updateCategory(
+            otrosActivos.copyWith(order: accionesOrder + 1),
+          );
+        }
+
+        categoriesUpdated = true;
+      }
+
+      if (categoriesUpdated) {
+        _categories = await _dbHelper.readAllCategories();
+      }
       _transactions = await _dbHelper.readAllTransactions();
       _subcategories = await _dbHelper.readAllSubcategories();
       _totalBalance = await _dbHelper.getTotalBalance();
@@ -52,7 +93,9 @@ class FinanceProvider extends ChangeNotifier {
 
   Future<void> addTransaction(FinancialTransaction transaction) async {
     try {
-      await _dbHelper.createTransaction(transaction);
+      await _dbHelper.applyPendingInterest();
+      final savedTransaction = await _dbHelper.createTransaction(transaction);
+      await _applyTransactionToSubcategory(savedTransaction);
       await loadData();
     } catch (e) {
       debugPrint('Error adding transaction: $e');
@@ -62,7 +105,22 @@ class FinanceProvider extends ChangeNotifier {
 
   Future<void> updateTransaction(FinancialTransaction transaction) async {
     try {
+      await _dbHelper.applyPendingInterest();
+      FinancialTransaction? previous;
+      try {
+        previous = _transactions.firstWhere((t) => t.id == transaction.id);
+      } catch (_) {
+        if (transaction.id != null) {
+          previous = await _dbHelper.readTransaction(transaction.id!);
+        }
+      }
+
+      if (previous != null) {
+        await _applyTransactionToSubcategory(previous, reverse: true);
+      }
+
       await _dbHelper.updateTransaction(transaction);
+      await _applyTransactionToSubcategory(transaction);
       await loadData();
     } catch (e) {
       debugPrint('Error updating transaction: $e');
@@ -72,6 +130,18 @@ class FinanceProvider extends ChangeNotifier {
 
   Future<void> deleteTransaction(int id) async {
     try {
+      await _dbHelper.applyPendingInterest();
+      FinancialTransaction? existing;
+      try {
+        existing = _transactions.firstWhere((t) => t.id == id);
+      } catch (_) {
+        existing = await _dbHelper.readTransaction(id);
+      }
+
+      if (existing != null) {
+        await _applyTransactionToSubcategory(existing, reverse: true);
+      }
+
       await _dbHelper.deleteTransaction(id);
       await loadData();
     } catch (e) {
@@ -95,6 +165,7 @@ class FinanceProvider extends ChangeNotifier {
 
   Future<void> addSubcategory(Subcategory subcategory) async {
     try {
+      await _dbHelper.applyPendingInterest();
       await _dbHelper.createSubcategory(subcategory);
       await loadData();
     } catch (e) {
@@ -105,6 +176,7 @@ class FinanceProvider extends ChangeNotifier {
 
   Future<void> updateSubcategory(Subcategory subcategory) async {
     try {
+      await _dbHelper.applyPendingInterest();
       await _dbHelper.updateSubcategory(subcategory);
       await loadData();
     } catch (e) {
@@ -115,6 +187,7 @@ class FinanceProvider extends ChangeNotifier {
 
   Future<void> deleteSubcategory(int id) async {
     try {
+      await _dbHelper.applyPendingInterest();
       await _dbHelper.deleteSubcategory(id);
       await loadData();
     } catch (e) {
@@ -128,18 +201,39 @@ class FinanceProvider extends ChangeNotifier {
   }
 
   // Actualizar balance de subcategoría al agregar transacción
-  Future<void> updateSubcategoryBalance(int subcategoryId, double amount, String type) async {
-    try {
-      final subcategory = _subcategories.firstWhere((s) => s.id == subcategoryId);
-      final newBalance = type == 'income' 
-          ? subcategory.balance + amount 
-          : subcategory.balance - amount;
-      
-      await _dbHelper.updateSubcategory(subcategory.copyWith(balance: newBalance));
-      await loadData();
-    } catch (e) {
-      debugPrint('Error updating subcategory balance: $e');
-      rethrow;
+  Future<void> _applyTransactionToSubcategory(
+    FinancialTransaction transaction, {
+    bool reverse = false,
+  }) async {
+    final subcategoryId = transaction.subcategoryId;
+    if (subcategoryId == null) {
+      return;
     }
+
+    final target = await _dbHelper.readSubcategory(subcategoryId);
+    if (target == null) {
+      return;
+    }
+
+    final direction = transaction.type == 'income' ? 1.0 : -1.0;
+    final effectiveDelta = (reverse ? -1.0 : 1.0) * direction * transaction.amount;
+
+    bool updatedInterestFlag = target.isInterestBearing;
+    double updatedInterestRate = target.interestRate;
+    DateTime? updatedLastApplied = target.lastInterestApplied;
+
+    if (!reverse && transaction.type == 'income' && transaction.isInterestBearing && transaction.interestRate > 0) {
+      updatedInterestFlag = true;
+      updatedInterestRate = transaction.interestRate;
+      updatedLastApplied = DateTime.now();
+    }
+
+    final updated = target.copyWith(
+      balance: target.balance + effectiveDelta,
+      isInterestBearing: updatedInterestFlag,
+      interestRate: updatedInterestRate,
+      lastInterestApplied: updatedLastApplied,
+    );
+    await _dbHelper.updateSubcategory(updated);
   }
 }

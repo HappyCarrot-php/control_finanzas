@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/category.dart';
@@ -23,7 +25,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 4,
+      version: 6,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
@@ -101,6 +103,34 @@ class DatabaseHelper {
 
       await _ensureDefaultSettings(db);
     }
+
+    if (oldVersion < 5) {
+      await db.execute('''
+        ALTER TABLE transactions ADD COLUMN excludeFromTotal INTEGER NOT NULL DEFAULT 0
+      ''');
+    }
+
+    if (oldVersion < 6) {
+      await db.execute('''
+        ALTER TABLE subcategories ADD COLUMN isInterestBearing INTEGER NOT NULL DEFAULT 0
+      ''');
+      await db.execute('''
+        ALTER TABLE subcategories ADD COLUMN interestRate REAL NOT NULL DEFAULT 0.0
+      ''');
+      await db.execute('''
+        ALTER TABLE subcategories ADD COLUMN lastInterestApplied TEXT
+      ''');
+
+      await db.execute('''
+        ALTER TABLE transactions ADD COLUMN isInterestBearing INTEGER NOT NULL DEFAULT 0
+      ''');
+      await db.execute('''
+        ALTER TABLE transactions ADD COLUMN interestRate REAL NOT NULL DEFAULT 0.0
+      ''');
+      await db.execute('''
+        ALTER TABLE transactions ADD COLUMN interestLastApplied TEXT
+      ''');
+    }
   }
 
   Future _createDB(Database db, int version) async {
@@ -128,6 +158,10 @@ class DatabaseHelper {
         description $textType,
         date $textType,
         type $textType,
+        excludeFromTotal INTEGER NOT NULL DEFAULT 0,
+        isInterestBearing INTEGER NOT NULL DEFAULT 0,
+        interestRate REAL NOT NULL DEFAULT 0.0,
+        interestLastApplied TEXT,
         FOREIGN KEY (categoryId) REFERENCES categories (id) ON DELETE CASCADE
       )
     ''');
@@ -167,6 +201,9 @@ class DatabaseHelper {
         color TEXT,
         "order" $intType,
         createdDate $textType,
+        isInterestBearing INTEGER NOT NULL DEFAULT 0,
+        interestRate REAL NOT NULL DEFAULT 0.0,
+        lastInterestApplied TEXT,
         FOREIGN KEY (categoryId) REFERENCES categories (id) ON DELETE CASCADE
       )
     ''');
@@ -211,7 +248,8 @@ class DatabaseHelper {
       {'name': 'Préstamos', 'icon': 'handshake', 'color': 'FF9B59B6', 'order': 5},
       {'name': 'Propiedades', 'icon': 'home', 'color': 'FF34495E', 'order': 6},
       {'name': 'Efectivo', 'icon': 'payments', 'color': 'FF2ECC71', 'order': 7},
-      {'name': 'Otros Activos', 'icon': 'inventory_2', 'color': 'FF95A5A6', 'order': 8},
+      {'name': 'Acciones', 'icon': 'show_chart', 'color': 'FF5DADE2', 'order': 8},
+      {'name': 'Otros Activos', 'icon': 'inventory_2', 'color': 'FF95A5A6', 'order': 9},
     ];
 
     for (var category in defaultCategories) {
@@ -396,32 +434,42 @@ class DatabaseHelper {
   // Obtener balance por categoría
   Future<double> getCategoryBalance(int categoryId) async {
     final db = await database;
-    final result = await db.rawQuery('''
+    final transactionResult = await db.rawQuery('''
       SELECT 
         SUM(CASE WHEN type = 'income' THEN amount ELSE -amount END) as balance
       FROM transactions
+      WHERE categoryId = ? AND excludeFromTotal = 0 AND (subcategoryId IS NULL OR subcategoryId = 0)
+    ''', [categoryId]);
+
+    final movementResult = await db.rawQuery('''
+      SELECT SUM(balance) as total
+      FROM subcategories
       WHERE categoryId = ?
     ''', [categoryId]);
 
-    if (result.isNotEmpty && result.first['balance'] != null) {
-      return result.first['balance'] as double;
-    }
-    return 0.0;
+    final txnBalance = (transactionResult.first['balance'] as num?)?.toDouble() ?? 0.0;
+    final movementBalance = (movementResult.first['total'] as num?)?.toDouble() ?? 0.0;
+    return txnBalance + movementBalance;
   }
 
   // Obtener balance total
   Future<double> getTotalBalance() async {
     final db = await database;
-    final result = await db.rawQuery('''
+    final transactionResult = await db.rawQuery('''
       SELECT 
         SUM(CASE WHEN type = 'income' THEN amount ELSE -amount END) as balance
       FROM transactions
+      WHERE excludeFromTotal = 0 AND (subcategoryId IS NULL OR subcategoryId = 0)
     ''');
 
-    if (result.isNotEmpty && result.first['balance'] != null) {
-      return result.first['balance'] as double;
-    }
-    return 0.0;
+    final movementResult = await db.rawQuery('''
+      SELECT SUM(balance) as total
+      FROM subcategories
+    ''');
+
+    final txnBalance = (transactionResult.first['balance'] as num?)?.toDouble() ?? 0.0;
+    final movementBalance = (movementResult.first['total'] as num?)?.toDouble() ?? 0.0;
+    return txnBalance + movementBalance;
   }
 
   // CRUD para Shopping Cart Items
@@ -457,6 +505,103 @@ class DatabaseHelper {
     return (result.first['total'] as double?) ?? 0.0;
   }
 
+  Future<void> applyPendingInterest() async {
+    final db = await database;
+    final now = DateTime.now();
+    final DateTime todayNoon = DateTime(now.year, now.month, now.day, 12);
+    final DateTime targetCutoff = now.isAfter(todayNoon)
+        ? todayNoon
+        : todayNoon.subtract(const Duration(days: 1));
+
+    final interestAccounts = await db.query(
+      'subcategories',
+      where: 'isInterestBearing = 1 AND interestRate > 0',
+    );
+
+    for (final account in interestAccounts) {
+      final int? subcategoryId = account['id'] as int?;
+      if (subcategoryId == null) {
+        continue;
+      }
+
+      final double balance = (account['balance'] as num?)?.toDouble() ?? 0.0;
+      final double rate = (account['interestRate'] as num?)?.toDouble() ?? 0.0;
+      if (balance <= 0 || rate <= 0) {
+        await db.update(
+          'subcategories',
+          {
+            'lastInterestApplied': targetCutoff.toIso8601String(),
+          },
+          where: 'id = ?',
+          whereArgs: [subcategoryId],
+        );
+        continue;
+      }
+
+      final String? createdDateRaw = account['createdDate'] as String?;
+      final DateTime createdDate = createdDateRaw != null
+          ? DateTime.tryParse(createdDateRaw) ?? DateTime.now()
+          : DateTime.now();
+      final String? lastAppliedRaw = account['lastInterestApplied'] as String?;
+      DateTime baseline = lastAppliedRaw != null && lastAppliedRaw.isNotEmpty
+          ? DateTime.tryParse(lastAppliedRaw) ?? createdDate
+          : createdDate;
+      baseline = DateTime(baseline.year, baseline.month, baseline.day, 12);
+
+      if (!targetCutoff.isAfter(baseline)) {
+        continue;
+      }
+
+      final int days = targetCutoff.difference(baseline).inDays;
+      if (days <= 0) {
+        continue;
+      }
+
+      final double dailyRate = rate / 100 / 365;
+      final double growthFactor = pow(1 + dailyRate, days).toDouble();
+      final double newBalance = balance * growthFactor;
+      final double interestEarned = newBalance - balance;
+
+      if (interestEarned <= 0) {
+        await db.update(
+          'subcategories',
+          {
+            'lastInterestApplied': targetCutoff.toIso8601String(),
+          },
+          where: 'id = ?',
+          whereArgs: [subcategoryId],
+        );
+        continue;
+      }
+
+      final double roundedBalance = double.parse(newBalance.toStringAsFixed(2));
+      final double roundedInterest = double.parse(interestEarned.toStringAsFixed(2));
+
+      await db.update(
+        'subcategories',
+        {
+          'balance': roundedBalance,
+          'lastInterestApplied': targetCutoff.toIso8601String(),
+        },
+        where: 'id = ?',
+        whereArgs: [subcategoryId],
+      );
+
+      await db.insert('transactions', {
+        'categoryId': account['categoryId'],
+        'subcategoryId': subcategoryId,
+        'amount': roundedInterest,
+        'description': 'Interés diario ${account['name']}',
+        'date': targetCutoff.toIso8601String(),
+        'type': 'income',
+        'excludeFromTotal': 0,
+        'isInterestBearing': 0,
+        'interestRate': rate,
+        'interestLastApplied': targetCutoff.toIso8601String(),
+      });
+    }
+  }
+
   // CRUD para Expense Templates
   Future<List<Map<String, dynamic>>> getAllExpenseTemplates() async {
     final db = await database;
@@ -471,7 +616,7 @@ class DatabaseHelper {
   // Obtener estadísticas de gastos
   Future<double> getTotalExpenses({DateTime? startDate, DateTime? endDate}) async {
     final db = await database;
-    String query = 'SELECT SUM(amount) as total FROM transactions WHERE type = "expense"';
+    String query = 'SELECT SUM(amount) as total FROM transactions WHERE type = "expense" AND excludeFromTotal = 0';
     List<dynamic> args = [];
 
     if (startDate != null) {
@@ -489,7 +634,7 @@ class DatabaseHelper {
 
   Future<double> getTotalIncome({DateTime? startDate, DateTime? endDate}) async {
     final db = await database;
-    String query = 'SELECT SUM(amount) as total FROM transactions WHERE type = "income"';
+    String query = 'SELECT SUM(amount) as total FROM transactions WHERE type = "income" AND excludeFromTotal = 0';
     List<dynamic> args = [];
 
     if (startDate != null) {
@@ -510,7 +655,7 @@ class DatabaseHelper {
     return await db.rawQuery('''
       SELECT description, COUNT(*) as frequency, AVG(amount) as avgAmount, SUM(amount) as totalAmount
       FROM transactions
-      WHERE type = "expense"
+      WHERE type = "expense" AND excludeFromTotal = 0
       GROUP BY description
       ORDER BY frequency DESC
       LIMIT ?
@@ -523,7 +668,7 @@ class DatabaseHelper {
       SELECT c.name, c.icon, c.color, SUM(t.amount) as total
       FROM transactions t
       JOIN categories c ON t.categoryId = c.id
-      WHERE t.type = "expense"
+      WHERE t.type = "expense" AND t.excludeFromTotal = 0
     ''';
     List<dynamic> args = [];
 
