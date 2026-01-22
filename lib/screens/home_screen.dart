@@ -183,7 +183,6 @@ class _HomeScreenState extends State<HomeScreen> {
         final entry = entries[index];
         return _buildCategoryCard(
           context,
-          provider,
           entry.key,
           entry.value,
           totalAbsBalance,
@@ -194,15 +193,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildCategoryCard(
     BuildContext context,
-    FinanceProvider provider,
     FinancialCategory category,
     double balance,
     double totalAbsBalance,
   ) {
     final color = Color(int.parse(category.color, radix: 16));
     final isPositive = balance >= 0;
-    final categoryTransactions = provider.getTransactionsByCategory(category.id!);
-    final categoryMovements = provider.getSubcategoriesByCategory(category.id!);
     final participation = totalAbsBalance == 0
       ? 0.0
       : (balance.abs() / totalAbsBalance).clamp(0.0, 1.0).toDouble();
@@ -312,50 +308,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 valueColor: AlwaysStoppedAnimation<Color>(color.withOpacity(0.85)),
               ),
             ),
-            const Spacer(),
-            Row(
-              children: [
-                _buildCategoryInfoChip(
-                  icon: Icons.account_balance_wallet_outlined,
-                  label: '${categoryMovements.length} mov',
-                ),
-                const SizedBox(width: 10),
-                _buildCategoryInfoChip(
-                  icon: Icons.swap_horiz,
-                  label: '${categoryTransactions.length} trans',
-                ),
-              ],
-            ),
+            const SizedBox(height: 12),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildCategoryInfoChip({
-    required IconData icon,
-    required String label,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.06),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: AppTheme.chromeMedium, size: 14),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: const TextStyle(
-              color: AppTheme.chromeLight,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
       ),
     );
   }

@@ -32,6 +32,26 @@ class FinanceProvider extends ChangeNotifier {
       _categories = await _dbHelper.readAllCategories();
 
       bool categoriesUpdated = false;
+      final duplicateAcciones = _categories
+          .where((category) => category.name.trim().toLowerCase() == 'acciones')
+          .toList();
+      if (duplicateAcciones.length > 1) {
+        duplicateAcciones.sort((a, b) => a.order.compareTo(b.order));
+        final duplicatesToRemove = duplicateAcciones
+            .skip(1)
+            .where((category) => category.id != null)
+            .toList();
+        if (duplicatesToRemove.isNotEmpty) {
+          final idsToRemove = duplicatesToRemove.map((category) => category.id!).toSet();
+          for (final duplicate in idsToRemove) {
+            await _dbHelper.deleteCategory(duplicate);
+          }
+          _categories = _categories
+              .where((category) => category.id == null || !idsToRemove.contains(category.id!))
+              .toList();
+          categoriesUpdated = true;
+        }
+      }
       if (!_categories.any((category) => category.name.toLowerCase() == 'acciones')) {
         FinancialCategory? otrosActivos;
         try {
