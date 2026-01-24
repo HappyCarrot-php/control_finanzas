@@ -40,6 +40,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   bool _excludeFromTotal = false;
   bool _didHydrateFromExisting = false;
   bool _isInterestBearingTransaction = false;
+  bool _isApplyingInterest = false;
 
   @override
   void initState() {
@@ -111,6 +112,25 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.transactionToEdit == null ? 'Nueva Transacción' : 'Editar Transacción'),
+        actions: [
+          if (_showSumarButton)
+            TextButton(
+              onPressed: _isApplyingInterest ? null : _handleApplyInterest,
+              style: TextButton.styleFrom(
+                foregroundColor: AppTheme.chromeLight,
+              ),
+              child: _isApplyingInterest
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(AppTheme.chromeLight),
+                      ),
+                    )
+                  : const Text('Sumar'),
+            ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -740,6 +760,106 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       if (mounted) {
         setState(() {
           _isLoading = false;
+        });
+      }
+    }
+  }
+
+  bool get _showSumarButton {
+    final transaction = widget.transactionToEdit;
+    if (transaction == null) {
+      return false;
+    }
+
+    final bool hasSubcategory = (transaction.subcategoryId ?? _selectedSubcategory?.id) != null;
+    if (!hasSubcategory) {
+      return false;
+    }
+
+    if (_transactionType != 'income') {
+      return false;
+    }
+
+    return _isInterestBearingTransaction || transaction.isInterestBearing;
+  }
+
+  Future<void> _handleApplyInterest() async {
+    final transaction = widget.transactionToEdit;
+    final activeSubcategoryId = _selectedSubcategory?.id ?? transaction?.subcategoryId;
+
+    if (transaction == null || activeSubcategoryId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Selecciona un movimiento válido para sumar interés.')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isApplyingInterest = true;
+    });
+
+    try {
+      final provider = context.read<FinanceProvider>();
+      final applied = await provider.applyInterestForTransaction(
+        transaction.copyWith(subcategoryId: activeSubcategoryId),
+        manual: true,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      if (applied > 0) {
+        FinancialTransaction? updated;
+        try {
+          updated = provider.transactions.firstWhere((t) => t.id == transaction.id);
+        } catch (_) {
+          updated = null;
+        }
+
+        Subcategory? refreshedSubcategory;
+        try {
+          refreshedSubcategory = provider.subcategories.firstWhere(
+            (subcategory) => subcategory.id == activeSubcategoryId,
+          );
+        } catch (_) {
+          refreshedSubcategory = _selectedSubcategory;
+        }
+
+        setState(() {
+          if (updated != null) {
+            _amountController.text = updated.amount.toStringAsFixed(2);
+            _isInterestBearingTransaction = updated.isInterestBearing;
+          }
+          if (refreshedSubcategory != null) {
+            _selectedSubcategory = refreshedSubcategory;
+          }
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Interés sumado: +${FormatUtils.formatCurrency(applied)}'),
+            backgroundColor: AppTheme.accentGreen,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No hay interés pendiente por sumar.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al sumar interés: $e'),
+            backgroundColor: AppTheme.accentRed,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isApplyingInterest = false;
         });
       }
     }

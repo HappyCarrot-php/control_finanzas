@@ -328,7 +328,7 @@ class _SplashScreenState extends State<SplashScreen>
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              'Inicializando seguridad biométrica y tablero principal',
+                              'Inicializando tablero principal y preferencias de seguridad',
                               style: TextStyle(
                                 color: AppTheme.chromeLight.withValues(
                                   alpha: 0.9,

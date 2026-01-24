@@ -25,7 +25,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 6,
+      version: 7,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
@@ -131,6 +131,23 @@ class DatabaseHelper {
         ALTER TABLE transactions ADD COLUMN interestLastApplied TEXT
       ''');
     }
+
+    if (oldVersion < 7) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS interest_logs (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          subcategoryId INTEGER NOT NULL,
+          transactionId INTEGER,
+          interestAmount REAL NOT NULL,
+          appliedRate REAL NOT NULL,
+          appliedAt TEXT NOT NULL,
+          source TEXT NOT NULL DEFAULT 'auto',
+          createdAt TEXT NOT NULL,
+          FOREIGN KEY (subcategoryId) REFERENCES subcategories (id) ON DELETE CASCADE,
+          FOREIGN KEY (transactionId) REFERENCES transactions (id) ON DELETE SET NULL
+        )
+      ''');
+    }
   }
 
   Future _createDB(Database db, int version) async {
@@ -205,6 +222,21 @@ class DatabaseHelper {
         interestRate REAL NOT NULL DEFAULT 0.0,
         lastInterestApplied TEXT,
         FOREIGN KEY (categoryId) REFERENCES categories (id) ON DELETE CASCADE
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE interest_logs (
+        id $idType,
+        subcategoryId $intType,
+        transactionId INTEGER,
+        interestAmount REAL NOT NULL,
+        appliedRate REAL NOT NULL,
+        appliedAt $textType,
+        source TEXT NOT NULL DEFAULT 'auto',
+        createdAt $textType,
+        FOREIGN KEY (subcategoryId) REFERENCES subcategories (id) ON DELETE CASCADE,
+        FOREIGN KEY (transactionId) REFERENCES transactions (id) ON DELETE SET NULL
       )
     ''');
 
@@ -505,16 +537,129 @@ class DatabaseHelper {
     return (result.first['total'] as double?) ?? 0.0;
   }
 
-  Future<void> applyPendingInterest() async {
+  Future<double> applyInterestForSubcategory(int subcategoryId, {String source = 'auto'}) async {
     final db = await database;
+    final accountRows = await db.query(
+      'subcategories',
+      where: 'id = ? AND isInterestBearing = 1 AND interestRate > 0',
+      whereArgs: [subcategoryId],
+      limit: 1,
+    );
+
+    if (accountRows.isEmpty) {
+      return 0.0;
+    }
+
+    final account = accountRows.first;
+    final double balance = (account['balance'] as num?)?.toDouble() ?? 0.0;
+    final double rate = (account['interestRate'] as num?)?.toDouble() ?? 0.0;
+
     final now = DateTime.now();
     final DateTime todayNoon = DateTime(now.year, now.month, now.day, 12);
     final DateTime targetCutoff = now.isAfter(todayNoon)
         ? todayNoon
         : todayNoon.subtract(const Duration(days: 1));
 
+    if (balance <= 0 || rate <= 0) {
+      await db.update(
+        'subcategories',
+        {
+          'lastInterestApplied': targetCutoff.toIso8601String(),
+        },
+        where: 'id = ?',
+        whereArgs: [subcategoryId],
+      );
+      return 0.0;
+    }
+
+    final String? createdDateRaw = account['createdDate'] as String?;
+    final DateTime createdDate = createdDateRaw != null
+        ? DateTime.tryParse(createdDateRaw) ?? DateTime.now()
+        : DateTime.now();
+    final String? lastAppliedRaw = account['lastInterestApplied'] as String?;
+    DateTime baseline = lastAppliedRaw != null && lastAppliedRaw.isNotEmpty
+        ? DateTime.tryParse(lastAppliedRaw) ?? createdDate
+        : createdDate;
+    baseline = DateTime(baseline.year, baseline.month, baseline.day, 12);
+
+    if (!targetCutoff.isAfter(baseline)) {
+      return 0.0;
+    }
+
+    final int days = targetCutoff.difference(baseline).inDays;
+    if (days <= 0) {
+      return 0.0;
+    }
+
+    final double dailyRate = rate / 100 / 365;
+    final double growthFactor = pow(1 + dailyRate, days).toDouble();
+    final double newBalance = balance * growthFactor;
+    final double interestEarned = newBalance - balance;
+    final double interestToApply = interestEarned <= 0 ? 0.0 : interestEarned;
+
+    final double roundedBalance = double.parse(newBalance.toStringAsFixed(2));
+    final double roundedInterest = double.parse(interestToApply.toStringAsFixed(2));
+
+    await db.update(
+      'subcategories',
+      {
+        'balance': roundedBalance,
+        'lastInterestApplied': targetCutoff.toIso8601String(),
+      },
+      where: 'id = ?',
+      whereArgs: [subcategoryId],
+    );
+
+    int? transactionId;
+
+    if (roundedInterest > 0) {
+      final transactionRows = await db.query(
+        'transactions',
+        where: 'subcategoryId = ? AND type = ? AND isInterestBearing = 1',
+        whereArgs: [subcategoryId, 'income'],
+        orderBy: 'date DESC',
+        limit: 1,
+      );
+
+      if (transactionRows.isNotEmpty) {
+        final transaction = transactionRows.first;
+        final double currentAmount = (transaction['amount'] as num?)?.toDouble() ?? 0.0;
+        final double updatedAmount = double.parse((currentAmount + roundedInterest).toStringAsFixed(2));
+
+        await db.update(
+          'transactions',
+          {
+            'amount': updatedAmount,
+            'interestLastApplied': targetCutoff.toIso8601String(),
+            'interestRate': rate,
+          },
+          where: 'id = ?',
+          whereArgs: [transaction['id']],
+        );
+        transactionId = transaction['id'] as int?;
+      }
+    }
+
+    if (roundedInterest > 0) {
+      await db.insert('interest_logs', {
+        'subcategoryId': subcategoryId,
+        'transactionId': transactionId,
+        'interestAmount': roundedInterest,
+        'appliedRate': rate,
+        'appliedAt': targetCutoff.toIso8601String(),
+        'source': source,
+        'createdAt': DateTime.now().toIso8601String(),
+      });
+    }
+
+    return roundedInterest;
+  }
+
+  Future<void> applyPendingInterest() async {
+    final db = await database;
     final interestAccounts = await db.query(
       'subcategories',
+      columns: ['id'],
       where: 'isInterestBearing = 1 AND interestRate > 0',
     );
 
@@ -523,82 +668,7 @@ class DatabaseHelper {
       if (subcategoryId == null) {
         continue;
       }
-
-      final double balance = (account['balance'] as num?)?.toDouble() ?? 0.0;
-      final double rate = (account['interestRate'] as num?)?.toDouble() ?? 0.0;
-      if (balance <= 0 || rate <= 0) {
-        await db.update(
-          'subcategories',
-          {
-            'lastInterestApplied': targetCutoff.toIso8601String(),
-          },
-          where: 'id = ?',
-          whereArgs: [subcategoryId],
-        );
-        continue;
-      }
-
-      final String? createdDateRaw = account['createdDate'] as String?;
-      final DateTime createdDate = createdDateRaw != null
-          ? DateTime.tryParse(createdDateRaw) ?? DateTime.now()
-          : DateTime.now();
-      final String? lastAppliedRaw = account['lastInterestApplied'] as String?;
-      DateTime baseline = lastAppliedRaw != null && lastAppliedRaw.isNotEmpty
-          ? DateTime.tryParse(lastAppliedRaw) ?? createdDate
-          : createdDate;
-      baseline = DateTime(baseline.year, baseline.month, baseline.day, 12);
-
-      if (!targetCutoff.isAfter(baseline)) {
-        continue;
-      }
-
-      final int days = targetCutoff.difference(baseline).inDays;
-      if (days <= 0) {
-        continue;
-      }
-
-      final double dailyRate = rate / 100 / 365;
-      final double growthFactor = pow(1 + dailyRate, days).toDouble();
-      final double newBalance = balance * growthFactor;
-      final double interestEarned = newBalance - balance;
-
-      if (interestEarned <= 0) {
-        await db.update(
-          'subcategories',
-          {
-            'lastInterestApplied': targetCutoff.toIso8601String(),
-          },
-          where: 'id = ?',
-          whereArgs: [subcategoryId],
-        );
-        continue;
-      }
-
-      final double roundedBalance = double.parse(newBalance.toStringAsFixed(2));
-      final double roundedInterest = double.parse(interestEarned.toStringAsFixed(2));
-
-      await db.update(
-        'subcategories',
-        {
-          'balance': roundedBalance,
-          'lastInterestApplied': targetCutoff.toIso8601String(),
-        },
-        where: 'id = ?',
-        whereArgs: [subcategoryId],
-      );
-
-      await db.insert('transactions', {
-        'categoryId': account['categoryId'],
-        'subcategoryId': subcategoryId,
-        'amount': roundedInterest,
-        'description': 'Interés diario ${account['name']}',
-        'date': targetCutoff.toIso8601String(),
-        'type': 'income',
-        'excludeFromTotal': 0,
-        'isInterestBearing': 0,
-        'interestRate': rate,
-        'interestLastApplied': targetCutoff.toIso8601String(),
-      });
+      await applyInterestForSubcategory(subcategoryId, source: 'auto');
     }
   }
 

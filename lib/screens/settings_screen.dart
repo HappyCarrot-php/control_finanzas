@@ -158,7 +158,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             subtitle: Text(
               protectionEnabled
-                  ? 'Requerirá contraseña al abrir la app.'
+                  ? 'Requerirá contraseña o huella al abrir la app.'
                   : 'La app abrirá sin pedir contraseña.',
               style: const TextStyle(color: AppTheme.chromeMedium),
             ),

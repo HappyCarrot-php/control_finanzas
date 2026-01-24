@@ -54,6 +54,8 @@ dependencies:
   
   # Iconos adicionales
   font_awesome_flutter: ^10.6.0
+  # Autenticación biométrica
+  local_auth: ^2.1.7
 
 dev_dependencies:
   flutter_test:
@@ -113,6 +115,6 @@ flutter:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/icon/app_icon.png"
+  image_path: "assets/icon/Wealth_Value.png"
   adaptive_icon_background: "#1C1E26"
-  adaptive_icon_foreground: "assets/icon/app_icon_foreground.png"
+  adaptive_icon_foreground: "assets/icon/Wealth_Value.png"

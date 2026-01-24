@@ -220,6 +220,27 @@ class FinanceProvider extends ChangeNotifier {
     return _subcategoryBalances[subcategoryId] ?? 0.0;
   }
 
+  Future<double> applyInterestForTransaction(
+    FinancialTransaction transaction, {
+    bool manual = false,
+  }) async {
+    if (transaction.subcategoryId == null) {
+      return 0.0;
+    }
+
+    try {
+      final applied = await _dbHelper.applyInterestForSubcategory(
+        transaction.subcategoryId!,
+        source: manual ? 'manual' : 'auto',
+      );
+      await loadData();
+      return applied;
+    } catch (e) {
+      debugPrint('Error applying interest: $e');
+      rethrow;
+    }
+  }
+
   // Actualizar balance de subcategoría al agregar transacción
   Future<void> _applyTransactionToSubcategory(
     FinancialTransaction transaction, {
