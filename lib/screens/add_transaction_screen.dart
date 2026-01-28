@@ -169,6 +169,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<FinancialCategory>(
+
                     value: _selectedCategory,
                     isExpanded: true,
                     dropdownColor: AppTheme.backgroundCard,
@@ -388,6 +389,33 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   return null;
                 },
               ),
+
+              if (widget.transactionToEdit != null) ...[
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: _isLoading
+                            ? null
+                            : () => _showAdjustAmountDialog(isAddition: true),
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text('Sumar monto'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: _isLoading
+                            ? null
+                            : () => _showAdjustAmountDialog(isAddition: false),
+                        icon: const Icon(Icons.remove, size: 18),
+                        label: const Text('Restar monto'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
 
               const SizedBox(height: 24),
 
@@ -763,6 +791,83 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         });
       }
     }
+  }
+
+  Future<void> _showAdjustAmountDialog({required bool isAddition}) async {
+    final controller = TextEditingController();
+    final actionLabel = isAddition ? 'Sumar monto' : 'Restar monto';
+
+    final delta = await showDialog<double>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: AppTheme.backgroundCard,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text(actionLabel),
+          content: TextField(
+            controller: controller,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+            ],
+            decoration: const InputDecoration(
+              prefixIcon: Icon(Icons.attach_money),
+              hintText: '0.00',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isAddition ? AppTheme.accentGreen : AppTheme.accentRed,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                final raw = controller.text.trim();
+                final value = double.tryParse(raw);
+                if (value == null || value <= 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Ingresa un monto válido mayor a 0.')),
+                  );
+                  return;
+                }
+                Navigator.of(dialogContext).pop(value);
+              },
+              child: Text(isAddition ? 'Sumar' : 'Restar'),
+            ),
+          ],
+        );
+      },
+    );
+
+    controller.dispose();
+
+    if (delta == null || delta <= 0) {
+      return;
+    }
+
+    final current = double.tryParse(_amountController.text) ?? 0.0;
+    final updated = isAddition ? current + delta : current - delta;
+
+    if (updated < 0) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('El resultado no puede ser negativo.')),
+        );
+      }
+      return;
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _amountController.text = updated.toStringAsFixed(2);
+    });
   }
 
   bool get _showSumarButton {

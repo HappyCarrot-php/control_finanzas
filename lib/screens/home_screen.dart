@@ -31,6 +31,8 @@ class _HomeScreenState extends State<HomeScreen> {
           return const Center(child: CircularProgressIndicator());
         }
 
+        final isHidden = provider.isBalanceHidden;
+
         return RefreshIndicator(
           onRefresh: () => provider.loadData(),
           child: SingleChildScrollView(
@@ -39,14 +41,18 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildTotalBalanceCard(provider.totalBalance),
+                _buildTotalBalanceCard(
+                  provider.totalBalance,
+                  isHidden,
+                  () => provider.toggleBalanceVisibility(),
+                ),
                 const SizedBox(height: 24),
                 Text(
                   'Activos Financieros',
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
                 const SizedBox(height: 16),
-                _buildCategoriesGrid(context, provider),
+                _buildCategoriesGrid(context, provider, isHidden),
                 const SizedBox(height: 32),
                 Text(
                   'Acciones rápidas',
@@ -62,7 +68,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildTotalBalanceCard(double balance) {
+  Widget _buildTotalBalanceCard(
+    double balance,
+    bool isHidden,
+    VoidCallback onToggle,
+  ) {
+    final displayBalance = isHidden ? '******' : FormatUtils.formatCurrency(balance);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -88,6 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
@@ -102,19 +114,43 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(width: 12),
-              const Text(
-                'Balance Total',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
+              const Expanded(
+                child: Text(
+                  'Balance Total',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: onToggle,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.2),
+                      ),
+                    ),
+                    child: Icon(
+                      isHidden ? Icons.visibility_off : Icons.visibility,
+                      color: Colors.white,
+                      size: 22,
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 16),
           Text(
-            FormatUtils.formatCurrency(balance),
+            displayBalance,
             style: const TextStyle(
               color: Colors.white,
               fontSize: 36,
@@ -135,7 +171,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildCategoriesGrid(BuildContext context, FinanceProvider provider) {
+  Widget _buildCategoriesGrid(
+    BuildContext context,
+    FinanceProvider provider,
+    bool isHidden,
+  ) {
     if (provider.categories.isEmpty) {
       return Center(
         child: Padding(
@@ -186,6 +226,7 @@ class _HomeScreenState extends State<HomeScreen> {
           entry.key,
           entry.value,
           totalAbsBalance,
+          isHidden,
         );
       },
     );
@@ -196,6 +237,7 @@ class _HomeScreenState extends State<HomeScreen> {
     FinancialCategory category,
     double balance,
     double totalAbsBalance,
+    bool isHidden,
   ) {
     final color = Color(int.parse(category.color, radix: 16));
     final isPositive = balance >= 0;
@@ -279,7 +321,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              category.name.replaceAll('Cuentas Bancarias', 'Cuentas\nBancarias'),
+              category.name,
               style: const TextStyle(
                 color: AppTheme.chromeLight,
                 fontSize: 17,
@@ -291,7 +333,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              FormatUtils.formatCurrency(balance),
+              isHidden ? '******' : FormatUtils.formatCurrency(balance),
               style: TextStyle(
                 color: isPositive ? AppTheme.accentGreen : AppTheme.accentRed,
                 fontSize: 20,

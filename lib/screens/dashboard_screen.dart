@@ -21,11 +21,20 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  int _currentTabIndex = 0;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _currentTabIndex = _tabController.index;
+    _tabController.addListener(() {
+      if (_tabController.index != _currentTabIndex) {
+        setState(() {
+          _currentTabIndex = _tabController.index;
+        });
+      }
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<FinanceProvider>().loadData();
     });
@@ -93,11 +102,13 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
           AnalyticsDashboardScreen(),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showAddTransactionDialog(context),
-        icon: const Icon(Icons.add),
-        label: const Text('Transacción'),
-      ),
+      floatingActionButton: _currentTabIndex == 0
+          ? FloatingActionButton(
+              onPressed: () => _showAddTransactionDialog(context),
+              tooltip: 'Agregar transacción',
+              child: const Icon(Icons.add),
+            )
+          : null,
     );
   }
 

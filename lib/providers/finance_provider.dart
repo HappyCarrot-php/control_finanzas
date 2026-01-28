@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/category.dart';
 import '../models/transaction.dart';
 import '../models/subcategory.dart';
@@ -14,6 +15,13 @@ class FinanceProvider extends ChangeNotifier {
   Map<int, double> _subcategoryBalances = {};
   double _totalBalance = 0.0;
   bool _isLoading = false;
+  bool _isBalanceHidden = false;
+
+  static const _balanceVisibilityKey = 'finance_balance_hidden';
+
+  FinanceProvider() {
+    _loadBalanceVisibility();
+  }
 
   List<FinancialCategory> get categories => _categories;
   List<FinancialTransaction> get transactions => _transactions;
@@ -22,6 +30,40 @@ class FinanceProvider extends ChangeNotifier {
   Map<int, double> get subcategoryBalances => _subcategoryBalances;
   double get totalBalance => _totalBalance;
   bool get isLoading => _isLoading;
+  bool get isBalanceHidden => _isBalanceHidden;
+
+  Future<void> toggleBalanceVisibility() async {
+    await setBalanceHidden(!_isBalanceHidden);
+  }
+
+  Future<void> setBalanceHidden(bool hidden) async {
+    if (_isBalanceHidden == hidden) {
+      return;
+    }
+
+    _isBalanceHidden = hidden;
+    notifyListeners();
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_balanceVisibilityKey, hidden);
+    } catch (e) {
+      debugPrint('Error saving balance visibility: $e');
+    }
+  }
+
+  Future<void> _loadBalanceVisibility() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final hidden = prefs.getBool(_balanceVisibilityKey) ?? false;
+      if (_isBalanceHidden != hidden) {
+        _isBalanceHidden = hidden;
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error loading balance visibility: $e');
+    }
+  }
 
   Future<void> loadData() async {
     _isLoading = true;

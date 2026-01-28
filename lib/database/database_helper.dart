@@ -470,7 +470,7 @@ class DatabaseHelper {
       SELECT 
         SUM(CASE WHEN type = 'income' THEN amount ELSE -amount END) as balance
       FROM transactions
-      WHERE categoryId = ? AND excludeFromTotal = 0 AND (subcategoryId IS NULL OR subcategoryId = 0)
+      WHERE categoryId = ? AND (subcategoryId IS NULL OR subcategoryId = 0)
     ''', [categoryId]);
 
     final movementResult = await db.rawQuery('''
@@ -499,9 +499,19 @@ class DatabaseHelper {
       FROM subcategories
     ''');
 
+    final excludedMovementResult = await db.rawQuery('''
+      SELECT 
+        SUM(CASE WHEN type = 'income' THEN amount ELSE -amount END) as balance
+      FROM transactions
+      WHERE excludeFromTotal = 1 AND subcategoryId IS NOT NULL AND subcategoryId != 0
+    ''');
+
     final txnBalance = (transactionResult.first['balance'] as num?)?.toDouble() ?? 0.0;
     final movementBalance = (movementResult.first['total'] as num?)?.toDouble() ?? 0.0;
-    return txnBalance + movementBalance;
+    final excludedMovementBalance =
+        (excludedMovementResult.first['balance'] as num?)?.toDouble() ?? 0.0;
+
+    return txnBalance + movementBalance - excludedMovementBalance;
   }
 
   // CRUD para Shopping Cart Items
