@@ -11,6 +11,7 @@ import 'transactions_history_screen.dart';
 import 'expenses_screen.dart';
 import 'shopping_cart_screen.dart';
 import 'actions_screen.dart';
+import 'movements_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -75,23 +76,82 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('WealthVault'),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [AppTheme.accentBlue, Color(0xFF3A7BD5)],
+                ),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.savings_rounded, color: Colors.white, size: 20),
+            ),
+            const SizedBox(width: 10),
+            const Text('WealthVault'),
+          ],
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh_rounded),
             onPressed: () => context.read<FinanceProvider>().loadData(),
             tooltip: 'Actualizar',
           ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: AppTheme.accentBlue,
-          labelColor: AppTheme.chromeLight,
-          unselectedLabelColor: AppTheme.chromeMedium,
-          tabs: const [
-            Tab(icon: Icon(Icons.home), text: 'Home'),
-            Tab(icon: Icon(Icons.analytics), text: 'Analytics'),
-          ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(52),
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppTheme.backgroundCardLight.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: TabBar(
+              controller: _tabController,
+              indicator: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [AppTheme.accentBlue, Color(0xFF3A7BD5)],
+                ),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.accentBlue.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              indicatorSize: TabBarIndicatorSize.tab,
+              dividerHeight: 0,
+              labelColor: Colors.white,
+              unselectedLabelColor: AppTheme.chromeMedium,
+              labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+              tabs: const [
+                Tab(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.home_rounded, size: 18),
+                      SizedBox(width: 6),
+                      Text('Home'),
+                    ],
+                  ),
+                ),
+                Tab(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.analytics_rounded, size: 18),
+                      SizedBox(width: 6),
+                      Text('Analytics'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
       drawer: _buildDrawer(context),
@@ -103,10 +163,27 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
         ],
       ),
       floatingActionButton: _currentTabIndex == 0
-          ? FloatingActionButton(
-              onPressed: () => _showAddTransactionDialog(context),
-              tooltip: 'Agregar transacción',
-              child: const Icon(Icons.add),
+          ? Container(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [AppTheme.accentBlue, Color(0xFF3A7BD5)],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.accentBlue.withOpacity(0.4),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: FloatingActionButton(
+                onPressed: () => _showAddTransactionDialog(context),
+                tooltip: 'Agregar transacción',
+                elevation: 0,
+                backgroundColor: Colors.transparent,
+                child: const Icon(Icons.add_rounded, size: 28),
+              ),
             )
           : null,
     );
@@ -115,371 +192,332 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
   Widget _buildDrawer(BuildContext context) {
     return Drawer(
       backgroundColor: AppTheme.backgroundDark,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.horizontal(right: Radius.circular(24)),
+      ),
       child: Consumer<FinanceProvider>(
         builder: (context, provider, child) {
-          return ListView(
-            padding: EdgeInsets.zero,
+          return Column(
             children: [
-              DrawerHeader(
-                decoration: BoxDecoration(
+              // Header premium con gradiente cromado
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).padding.top + 24,
+                  left: 24,
+                  right: 24,
+                  bottom: 24,
+                ),
+                decoration: const BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [
-                      AppTheme.accentBlue,
-                      AppTheme.accentBlue.withOpacity(0.7),
-                    ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF1A2744),
+                      Color(0xFF0F1B2D),
+                      Color(0xFF162138),
+                    ],
                   ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
+                        gradient: const LinearGradient(
+                          colors: [AppTheme.accentBlue, Color(0xFF3A7BD5)],
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.accentBlue.withOpacity(0.4),
+                            blurRadius: 16,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
                       ),
                       child: const Icon(
-                        Icons.account_balance_wallet,
+                        Icons.savings_rounded,
                         color: Colors.white,
-                        size: 36,
+                        size: 32,
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 18),
                     const Text(
                       'WealthVault',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 26,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.5,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Tu Patrimonio, Tu Futuro',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: 14,
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        gradient: LinearGradient(
+                          colors: [
+                            AppTheme.accentBlue.withOpacity(0.2),
+                            AppTheme.accentBlue.withOpacity(0.05),
+                          ],
+                        ),
+                        border: Border.all(
+                          color: AppTheme.accentBlue.withOpacity(0.3),
+                        ),
+                      ),
+                      child: const Text(
+                        'Tu Patrimonio, Tu Futuro',
+                        style: TextStyle(
+                          color: AppTheme.chromeLight,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 0.5,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-              
-              // Dashboard
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppTheme.accentBlue.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.dashboard,
-                    color: AppTheme.accentBlue,
-                  ),
-                ),
-                title: const Text(
-                  'Dashboard',
-                  style: TextStyle(
-                    color: AppTheme.chromeLight,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _tabController.animateTo(0);
-                },
-              ),
-              
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppTheme.accentGold.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.bolt,
-                    color: AppTheme.accentGold,
-                  ),
-                ),
-                title: const Text(
-                  'Acciones',
-                  style: TextStyle(
-                    color: AppTheme.chromeLight,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                subtitle: const Text(
-                  'Atajos y herramientas rápidas',
-                  style: TextStyle(
-                    color: AppTheme.chromeMedium,
-                    fontSize: 12,
-                  ),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _showActionsQuickMenu(context);
-                },
-              ),
 
-              const Divider(color: AppTheme.chromeDark),
-              
-              // Historial
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppTheme.accentBlue.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.history,
-                    color: AppTheme.accentBlue,
-                  ),
-                ),
-                title: const Text(
-                  'Historial',
-                  style: TextStyle(
-                    color: AppTheme.chromeLight,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                subtitle: Text(
-                  '${provider.transactions.length} transacciones',
-                  style: const TextStyle(
-                    color: AppTheme.chromeMedium,
-                    fontSize: 12,
-                  ),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const TransactionsHistoryScreen(),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  children: [
+                    _buildDrawerItem(
+                      icon: Icons.dashboard_rounded,
+                      label: 'Dashboard',
+                      subtitle: 'Vista general',
+                      color: AppTheme.accentBlue,
+                      onTap: () {
+                        Navigator.pop(context);
+                        _tabController.animateTo(0);
+                      },
                     ),
-                  );
-                },
-              ),
-              
-              // Nueva Transacción
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppTheme.accentOrange.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.add_circle,
-                    color: AppTheme.accentOrange,
-                  ),
-                ),
-                title: const Text(
-                  'Nueva Transacción',
-                  style: TextStyle(
-                    color: AppTheme.chromeLight,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                subtitle: const Text(
-                  'Agregar ingreso o gasto',
-                  style: TextStyle(
-                    color: AppTheme.chromeMedium,
-                    fontSize: 12,
-                  ),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _showAddTransactionDialog(context);
-                },
-              ),
-              
-              const Divider(color: AppTheme.chromeDark),
-              
-              // Gastos Recurrentes
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppTheme.accentRed.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.receipt_long,
-                    color: AppTheme.accentRed,
-                  ),
-                ),
-                title: const Text(
-                  'Gastos Recurrentes',
-                  style: TextStyle(
-                    color: AppTheme.chromeLight,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                subtitle: const Text(
-                  'Luz, agua, renta, etc.',
-                  style: TextStyle(
-                    color: AppTheme.chromeMedium,
-                    fontSize: 12,
-                  ),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ExpensesScreen(),
+                    _buildDrawerItem(
+                      icon: Icons.account_balance_wallet_rounded,
+                      label: 'Gestor de Movimientos',
+                      subtitle: 'Administra tus cuentas y saldos',
+                      color: const Color(0xFF00BCD4),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const MovementsScreen(),
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
-              
-              // Carrito de Compras
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppTheme.accentGreen.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.shopping_cart,
-                    color: AppTheme.accentGreen,
-                  ),
-                ),
-                title: const Text(
-                  'Carrito de Compras',
-                  style: TextStyle(
-                    color: AppTheme.chromeLight,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                subtitle: const Text(
-                  'Lista de compras',
-                  style: TextStyle(
-                    color: AppTheme.chromeMedium,
-                    fontSize: 12,
-                  ),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ShoppingCartScreen(),
+                    _buildDrawerItem(
+                      icon: Icons.bolt_rounded,
+                      label: 'Acciones Rápidas',
+                      subtitle: 'Atajos y herramientas',
+                      color: AppTheme.accentGold,
+                      onTap: () {
+                        Navigator.pop(context);
+                        _showActionsQuickMenu(context);
+                      },
                     ),
-                  );
-                },
-              ),
-              
-              const Divider(color: AppTheme.chromeDark),
-              
-              // Backup
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppTheme.accentGreen.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.backup,
-                    color: AppTheme.accentGreen,
-                  ),
-                ),
-                title: const Text(
-                  'Backup',
-                  style: TextStyle(
-                    color: AppTheme.chromeLight,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                subtitle: const Text(
-                  'Gestionar copias de seguridad',
-                  style: TextStyle(
-                    color: AppTheme.chromeMedium,
-                    fontSize: 12,
-                  ),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _showBackupMenu(context);
-                },
-              ),
-              
-              const Divider(color: AppTheme.chromeDark),
-              
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppTheme.chromeMedium.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.settings,
-                    color: AppTheme.chromeLight,
-                  ),
-                ),
-                title: const Text(
-                  'Ajustes',
-                  style: TextStyle(
-                    color: AppTheme.chromeLight,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                subtitle: const Text(
-                  'Bloqueo y configuración general',
-                  style: TextStyle(
-                    color: AppTheme.chromeMedium,
-                    fontSize: 12,
-                  ),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.pushNamed(context, '/settings');
-                },
-              ),
 
-              const Divider(color: AppTheme.chromeDark),
-
-              // Balance Total (informativo)
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: AppTheme.shinyCard(
-                    color: AppTheme.accentGold,
-                    borderRadius: 12,
-                  ),
-                  child: Column(
-                    children: [
-                      const Text(
-                        'Balance Total',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      child: Container(
+                        height: 1,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.transparent,
+                              AppTheme.chromeMedium.withOpacity(0.2),
+                              Colors.transparent,
+                            ],
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
+                    ),
+
+                    _buildDrawerItem(
+                      icon: Icons.history_rounded,
+                      label: 'Historial',
+                      subtitle: '${provider.transactions.length} transacciones',
+                      color: AppTheme.accentBlue,
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const TransactionsHistoryScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.add_circle_rounded,
+                      label: 'Nueva Transacción',
+                      subtitle: 'Agregar ingreso o gasto',
+                      color: AppTheme.accentOrange,
+                      onTap: () {
+                        Navigator.pop(context);
+                        _showAddTransactionDialog(context);
+                      },
+                    ),
+
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      child: Container(
+                        height: 1,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.transparent,
+                              AppTheme.chromeMedium.withOpacity(0.2),
+                              Colors.transparent,
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    _buildDrawerItem(
+                      icon: Icons.receipt_long_rounded,
+                      label: 'Gastos Recurrentes',
+                      subtitle: 'Luz, agua, renta, etc.',
+                      color: AppTheme.accentRed,
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ExpensesScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.shopping_cart_rounded,
+                      label: 'Carrito de Compras',
+                      subtitle: 'Lista de compras',
+                      color: AppTheme.accentGreen,
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ShoppingCartScreen(),
+                          ),
+                        );
+                      },
+                    ),
+
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      child: Container(
+                        height: 1,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.transparent,
+                              AppTheme.chromeMedium.withOpacity(0.2),
+                              Colors.transparent,
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    _buildDrawerItem(
+                      icon: Icons.backup_rounded,
+                      label: 'Backup',
+                      subtitle: 'Gestionar copias de seguridad',
+                      color: const Color(0xFF26A69A),
+                      onTap: () {
+                        Navigator.pop(context);
+                        _showBackupMenu(context);
+                      },
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.settings_rounded,
+                      label: 'Ajustes',
+                      subtitle: 'Bloqueo y configuración',
+                      color: AppTheme.chromeMedium,
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.pushNamed(context, '/settings');
+                      },
+                    ),
+                  ],
+                ),
+              ),
+
+              // Balance total en la parte inferior
+              Container(
+                margin: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(18),
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF1A2744),
+                      Color(0xFF253B5C),
+                    ],
+                  ),
+                  border: Border.all(
+                    color: AppTheme.accentBlue.withOpacity(0.2),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppTheme.accentGold.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            Icons.account_balance_rounded,
+                            color: AppTheme.accentGold,
+                            size: 18,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        const Text(
+                          'Balance Total',
+                          style: TextStyle(
+                            color: AppTheme.chromeMedium,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
                         NumberFormat.currency(symbol: '\$', decimalDigits: 2)
                             .format(provider.totalBalance),
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
                           letterSpacing: -0.5,
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -489,6 +527,71 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
     );
   }
 
+  Widget _buildDrawerItem({
+    required IconData icon,
+    required String label,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          splashColor: color.withOpacity(0.1),
+          highlightColor: color.withOpacity(0.05),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: color, size: 22),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        style: const TextStyle(
+                          color: AppTheme.chromeLight,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          color: AppTheme.chromeMedium.withOpacity(0.7),
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppTheme.chromeMedium.withOpacity(0.3),
+                  size: 20,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
   void _showAddTransactionDialog(BuildContext context) {
     final provider = context.read<FinanceProvider>();
     if (provider.categories.isEmpty) {

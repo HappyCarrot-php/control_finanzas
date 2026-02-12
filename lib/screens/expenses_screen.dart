@@ -76,7 +76,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             end: Alignment.bottomRight,
             colors: [
               AppTheme.backgroundDark,
-              Color(0xFF202433),
+              Color(0xFF131820),
               AppTheme.backgroundCard,
             ],
           ),
@@ -87,10 +87,13 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               _buildHeader(),
               Expanded(
                 child: Container(
-                  margin: const EdgeInsets.only(top: 20),
-                  decoration: AppTheme.chromeContainer(
-                    color: AppTheme.backgroundCard.withOpacity(0.96),
-                    borderRadius: 28,
+                  margin: const EdgeInsets.only(top: 16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.backgroundCard.withValues(alpha: 0.96),
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                    border: Border.all(
+                      color: AppTheme.chromeMedium.withValues(alpha: 0.06),
+                    ),
                   ),
                   child: Column(
                     children: [

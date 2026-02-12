@@ -62,7 +62,7 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
             end: Alignment.bottomRight,
             colors: [
               AppTheme.backgroundDark,
-              Color(0xFF222634),
+              Color(0xFF131820),
               AppTheme.backgroundCard,
             ],
           ),
@@ -73,11 +73,13 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
               _buildHeader(),
               Expanded(
                 child: Container(
-                  margin: const EdgeInsets.only(top: 20),
-                  decoration: AppTheme.chromeContainer(
-                    color: AppTheme.backgroundCard.withOpacity(0.96),
-                    borderRadius: 28,
-                    withGradient: true,
+                  margin: const EdgeInsets.only(top: 16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.backgroundCard.withValues(alpha: 0.96),
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                    border: Border.all(
+                      color: AppTheme.chromeMedium.withValues(alpha: 0.06),
+                    ),
                   ),
                   child: Column(
                     children: [
@@ -172,10 +174,7 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.all(22),
-      decoration: AppTheme.chromeContainer(
-        color: AppTheme.backgroundCardLight,
-        borderRadius: 24,
-      ),
+      decoration: BoxDecoration(color: AppTheme.backgroundCardLight, borderRadius: BorderRadius.circular(24), border: Border.all(color: AppTheme.chromeMedium.withValues(alpha: 0.08))),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -203,11 +202,7 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
           ),
           Container(
             padding: const EdgeInsets.all(15),
-            decoration: AppTheme.chromeContainer(
-              color: AppTheme.backgroundCard,
-              borderRadius: 50,
-              withGradient: false,
-            ),
+            decoration: BoxDecoration(color: AppTheme.backgroundCard, borderRadius: BorderRadius.circular(50), border: Border.all(color: AppTheme.chromeMedium.withValues(alpha: 0.08))),
             child: Text(
               '${_cartItems.length}',
               style: const TextStyle(
@@ -287,11 +282,7 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
             child: Container(
               margin: const EdgeInsets.only(bottom: 10),
               padding: const EdgeInsets.all(18),
-              decoration: AppTheme.chromeContainer(
-                color: AppTheme.backgroundCardLight,
-                borderRadius: 20,
-                withGradient: false,
-              ),
+              decoration: BoxDecoration(color: AppTheme.backgroundCardLight, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppTheme.chromeMedium.withValues(alpha: 0.08))),
               child: Row(
                 children: [
                   Container(

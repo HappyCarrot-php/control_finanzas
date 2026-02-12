@@ -193,7 +193,7 @@ class _PasswordLockScreenState extends State<PasswordLockScreen> {
                 constraints: const BoxConstraints(maxWidth: 360),
                 child: Container(
                   padding: const EdgeInsets.all(24),
-                  decoration: AppTheme.chromeContainer(borderRadius: 24),
+                  decoration: BoxDecoration(color: AppTheme.backgroundCard, borderRadius: BorderRadius.circular(24), border: Border.all(color: AppTheme.chromeMedium.withValues(alpha: 0.08))),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -201,10 +201,7 @@ class _PasswordLockScreenState extends State<PasswordLockScreen> {
                       Container(
                         width: 80,
                         height: 80,
-                        decoration: AppTheme.shinyCard(
-                          color: AppTheme.accentBlue,
-                          borderRadius: 20,
-                        ),
+                        decoration: BoxDecoration(color: AppTheme.accentBlue.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(20)),
                         child: const Icon(
                           Icons.lock_outline,
                           color: Colors.white,

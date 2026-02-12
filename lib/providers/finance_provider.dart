@@ -168,13 +168,15 @@ class FinanceProvider extends ChangeNotifier {
   Future<void> updateTransaction(FinancialTransaction transaction) async {
     try {
       await _dbHelper.applyPendingInterest();
+      // Siempre leer la transacción previa de la BD para evitar datos stale
       FinancialTransaction? previous;
-      try {
-        previous = _transactions.firstWhere((t) => t.id == transaction.id);
-      } catch (_) {
-        if (transaction.id != null) {
-          previous = await _dbHelper.readTransaction(transaction.id!);
-        }
+      if (transaction.id != null) {
+        previous = await _dbHelper.readTransaction(transaction.id!);
+      }
+      if (previous == null) {
+        try {
+          previous = _transactions.firstWhere((t) => t.id == transaction.id);
+        } catch (_) {}
       }
 
       if (previous != null) {
@@ -193,11 +195,12 @@ class FinanceProvider extends ChangeNotifier {
   Future<void> deleteTransaction(int id) async {
     try {
       await _dbHelper.applyPendingInterest();
-      FinancialTransaction? existing;
-      try {
-        existing = _transactions.firstWhere((t) => t.id == id);
-      } catch (_) {
-        existing = await _dbHelper.readTransaction(id);
+      // Siempre leer de la BD para evitar datos stale
+      FinancialTransaction? existing = await _dbHelper.readTransaction(id);
+      if (existing == null) {
+        try {
+          existing = _transactions.firstWhere((t) => t.id == id);
+        } catch (_) {}
       }
 
       if (existing != null) {
@@ -293,6 +296,7 @@ class FinanceProvider extends ChangeNotifier {
       return;
     }
 
+    // Siempre leer de la BD para evitar datos desincronizados
     final target = await _dbHelper.readSubcategory(subcategoryId);
     if (target == null) {
       return;
@@ -308,8 +312,13 @@ class FinanceProvider extends ChangeNotifier {
     if (!reverse && transaction.type == 'income' && transaction.isInterestBearing && transaction.interestRate > 0) {
       updatedInterestFlag = true;
       updatedInterestRate = transaction.interestRate;
-      updatedLastApplied = DateTime.now();
+      if (updatedLastApplied == null) {
+        updatedLastApplied = DateTime.now();
+      }
     }
+
+    // Al revertir, no debemos desactivar el interés del movimiento
+    // ya que puede haber otras transacciones que lo usan
 
     final updated = target.copyWith(
       balance: target.balance + effectiveDelta,

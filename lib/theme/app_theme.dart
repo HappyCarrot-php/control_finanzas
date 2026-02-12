@@ -23,10 +23,10 @@ class AppTheme {
   static const Color accentPurple = Color(0xFFA569BD);
   static const Color accentGold = Color(0xFFFFD700);
   
-  // Colores para el background con efecto metálico plateado
-  static const Color backgroundDark = Color(0xFF1C1E26);
-  static const Color backgroundCard = Color(0xFF2A2D3A);
-  static const Color backgroundCardLight = Color(0xFF353847);
+  // Colores background premium
+  static const Color backgroundDark = Color(0xFF0D1117);
+  static const Color backgroundCard = Color(0xFF161B22);
+  static const Color backgroundCardLight = Color(0xFF21262D);
   
   static ThemeData get darkTheme {
     return ThemeData(
@@ -35,11 +35,11 @@ class AppTheme {
       scaffoldBackgroundColor: backgroundDark,
       
       colorScheme: const ColorScheme.dark(
-        primary: chromeLight,
+        primary: accentBlue,
         secondary: accentBlue,
         surface: backgroundCard,
         surfaceContainerHighest: backgroundCardLight,
-        onPrimary: chromeBlack,
+        onPrimary: Colors.white,
         onSecondary: Colors.white,
         onSurface: chromeLight,
       ),
@@ -47,20 +47,21 @@ class AppTheme {
       appBarTheme: const AppBarTheme(
         backgroundColor: backgroundDark,
         elevation: 0,
-        centerTitle: true,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
         titleTextStyle: TextStyle(
           color: chromeLight,
           fontSize: 22,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.5,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.3,
         ),
         iconTheme: IconThemeData(color: chromeLight),
       ),
 
       tabBarTheme: const TabBarThemeData(
-        labelColor: silverBright,
+        labelColor: Colors.white,
         unselectedLabelColor: chromeMedium,
-        indicatorSize: TabBarIndicatorSize.label,
+        indicatorSize: TabBarIndicatorSize.tab,
         indicatorColor: accentBlue,
       ),
 
@@ -77,29 +78,30 @@ class AppTheme {
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return accentGreen;
+            return accentBlue;
           }
           return chromeMedium;
         }),
         trackColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return accentGreen.withOpacity(0.4);
+            return accentBlue.withOpacity(0.35);
           }
-          return chromeMedium.withOpacity(0.3);
+          return chromeMedium.withOpacity(0.2);
         }),
       ),
 
       dialogTheme: DialogThemeData(
         backgroundColor: backgroundCard,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         titleTextStyle: const TextStyle(
           color: chromeLight,
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
         ),
         contentTextStyle: const TextStyle(
           color: chromeMedium,
           fontSize: 14,
+          height: 1.5,
         ),
       ),
 
@@ -110,17 +112,17 @@ class AppTheme {
           fontSize: 14,
         ),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
       
       cardTheme: CardThemeData(
         color: backgroundCard,
-        elevation: 8,
-        shadowColor: Colors.black45,
+        elevation: 0,
+        shadowColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           side: BorderSide(
-            color: chromeMedium.withOpacity(0.1),
+            color: silverMedium.withOpacity(0.08),
             width: 1,
           ),
         ),
@@ -130,15 +132,30 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: accentBlue,
           foregroundColor: Colors.white,
-          elevation: 4,
-          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(14),
           ),
           textStyle: const TextStyle(
-            fontSize: 16,
+            fontSize: 15,
             fontWeight: FontWeight.w600,
-            letterSpacing: 0.5,
+            letterSpacing: 0.3,
+          ),
+        ),
+      ),
+
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: chromeLight,
+          side: BorderSide(color: chromeMedium.withOpacity(0.3)),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          textStyle: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),
@@ -146,67 +163,79 @@ class AppTheme {
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
         backgroundColor: accentBlue,
         foregroundColor: Colors.white,
-        elevation: 8,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(16)),
+        ),
       ),
       
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: backgroundCardLight,
+        fillColor: backgroundCardLight.withOpacity(0.6),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: chromeMedium.withOpacity(0.3)),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: chromeMedium.withOpacity(0.15)),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: chromeMedium.withOpacity(0.3)),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: chromeMedium.withOpacity(0.15)),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: accentBlue, width: 2),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: accentBlue, width: 1.5),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: accentRed, width: 1),
         ),
         labelStyle: const TextStyle(color: chromeMedium),
-        hintStyle: TextStyle(color: chromeMedium.withOpacity(0.6)),
+        hintStyle: TextStyle(color: chromeMedium.withOpacity(0.5)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
       
       textTheme: const TextTheme(
         displayLarge: TextStyle(
           fontSize: 48,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w800,
           color: chromeLight,
-          letterSpacing: -1,
+          letterSpacing: -1.5,
         ),
         displayMedium: TextStyle(
           fontSize: 36,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w700,
           color: chromeLight,
+          letterSpacing: -0.5,
         ),
         displaySmall: TextStyle(
           fontSize: 28,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           color: chromeLight,
         ),
         headlineMedium: TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.w600,
+          fontSize: 22,
+          fontWeight: FontWeight.w700,
           color: chromeLight,
+          letterSpacing: -0.3,
         ),
         titleLarge: TextStyle(
-          fontSize: 20,
+          fontSize: 18,
           fontWeight: FontWeight.w600,
           color: chromeLight,
         ),
         titleMedium: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
           color: chromeLight,
         ),
         bodyLarge: TextStyle(
           fontSize: 16,
           color: chromeMedium,
+          height: 1.5,
         ),
         bodyMedium: TextStyle(
           fontSize: 14,
           color: chromeMedium,
+          height: 1.5,
         ),
       ),
       
@@ -216,17 +245,28 @@ class AppTheme {
       ),
       
       dividerTheme: DividerThemeData(
-        color: chromeMedium.withOpacity(0.2),
+        color: chromeMedium.withOpacity(0.1),
         thickness: 1,
         space: 1,
+      ),
+
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: backgroundCard,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+      ),
+
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: accentBlue,
       ),
     );
   }
   
-  // Decoración para contenedores con efecto cromado plateado
+  // Decoración moderna para contenedores con efecto glass
   static BoxDecoration chromeContainer({
     Color? color,
-    double borderRadius = 16,
+    double borderRadius = 18,
     bool withGradient = true,
   }) {
     return BoxDecoration(
@@ -236,40 +276,28 @@ class AppTheme {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          (color ?? backgroundCard).withOpacity(0.95),
           (color ?? backgroundCard),
-          (color ?? backgroundCard).withOpacity(0.85),
+          (color ?? backgroundCardLight).withOpacity(0.7),
         ],
-        stops: const [0.0, 0.5, 1.0],
       ) : null,
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.4),
-          blurRadius: 16,
-          offset: const Offset(0, 6),
-        ),
-        BoxShadow(
-          color: silverLight.withOpacity(0.08),
-          blurRadius: 10,
-          offset: const Offset(-3, -3),
-        ),
-        BoxShadow(
-          color: silverBright.withOpacity(0.05),
-          blurRadius: 6,
-          offset: const Offset(2, 2),
+          color: Colors.black.withOpacity(0.2),
+          blurRadius: 12,
+          offset: const Offset(0, 4),
         ),
       ],
       border: Border.all(
-        color: silverMedium.withOpacity(0.15),
-        width: 1.5,
+        color: silverMedium.withOpacity(0.08),
+        width: 1,
       ),
     );
   }
   
-  // Decoración para tarjetas con efecto metálico plateado brillante
+  // Decoración premium para tarjetas de color
   static BoxDecoration shinyCard({
     required Color color,
-    double borderRadius = 16,
+    double borderRadius = 18,
   }) {
     return BoxDecoration(
       borderRadius: BorderRadius.circular(borderRadius),
@@ -277,40 +305,30 @@ class AppTheme {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          color.withOpacity(0.85),
-          color,
-          color.withOpacity(0.7),
           color.withOpacity(0.9),
+          color,
+          color.withOpacity(0.8),
         ],
-        stops: const [0.0, 0.4, 0.7, 1.0],
+        stops: const [0.0, 0.5, 1.0],
       ),
       boxShadow: [
         BoxShadow(
-          color: color.withOpacity(0.5),
-          blurRadius: 20,
-          offset: const Offset(0, 8),
+          color: color.withOpacity(0.3),
+          blurRadius: 16,
+          offset: const Offset(0, 6),
         ),
         BoxShadow(
-          color: silverBright.withOpacity(0.15),
-          blurRadius: 12,
-          offset: const Offset(-4, -4),
-        ),
-        BoxShadow(
-          color: Colors.black.withOpacity(0.3),
+          color: Colors.black.withOpacity(0.2),
           blurRadius: 8,
-          offset: const Offset(3, 3),
+          offset: const Offset(0, 2),
         ),
       ],
-      border: Border.all(
-        color: silverLight.withOpacity(0.2),
-        width: 1,
-      ),
     );
   }
   
-  // Nuevo: Decoración para efecto de acero inoxidable pulido
+  // Decoración de acero
   static BoxDecoration steelCard({
-    double borderRadius = 16,
+    double borderRadius = 18,
   }) {
     return BoxDecoration(
       borderRadius: BorderRadius.circular(borderRadius),
@@ -318,29 +336,30 @@ class AppTheme {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          Color(0xFF3A3F51),
-          Color(0xFF2D3142),
-          Color(0xFF3A3F51),
-          Color(0xFF464B5D),
+          Color(0xFF1E2330),
+          Color(0xFF161B22),
+          Color(0xFF1E2330),
         ],
-        stops: [0.0, 0.3, 0.6, 1.0],
+        stops: [0.0, 0.5, 1.0],
       ),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.5),
-          blurRadius: 20,
-          offset: const Offset(0, 10),
-        ),
-        BoxShadow(
-          color: silverLight.withOpacity(0.1),
-          blurRadius: 15,
-          offset: const Offset(-5, -5),
+          color: Colors.black.withOpacity(0.3),
+          blurRadius: 16,
+          offset: const Offset(0, 6),
         ),
       ],
       border: Border.all(
-        color: silverMedium.withOpacity(0.2),
-        width: 2,
+        color: silverMedium.withOpacity(0.1),
+        width: 1,
       ),
     );
   }
+
+  // Gradiente primario reutilizable
+  static const LinearGradient primaryGradient = LinearGradient(
+    colors: [accentBlue, Color(0xFF3A7BD5)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 }

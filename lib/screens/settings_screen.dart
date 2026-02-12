@@ -27,7 +27,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             colors: [
               AppTheme.backgroundDark,
               AppTheme.backgroundCard,
-              AppTheme.chromeBlack.withOpacity(0.9),
+              AppTheme.backgroundDark.withValues(alpha: 0.95),
             ],
           ),
         ),
@@ -68,7 +68,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildIntroBanner() {
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: AppTheme.chromeContainer(borderRadius: 24),
+      decoration: BoxDecoration(
+        color: AppTheme.backgroundCard,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: AppTheme.chromeMedium.withValues(alpha: 0.08),
+        ),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: const [
@@ -99,7 +105,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: AppTheme.chromeContainer(borderRadius: 24),
+      decoration: BoxDecoration(
+        color: AppTheme.backgroundCard,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: AppTheme.chromeMedium.withValues(alpha: 0.08),
+        ),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -107,14 +119,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               Container(
                 padding: const EdgeInsets.all(14),
-                decoration: AppTheme.shinyCard(
-                  color: protectionEnabled ? AppTheme.accentGreen : AppTheme.accentBlue,
-                  borderRadius: 18,
+                decoration: BoxDecoration(
+                  color: (protectionEnabled ? AppTheme.accentGreen : AppTheme.accentBlue).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: Icon(
                   protectionEnabled ? Icons.verified_user : Icons.lock_open,
-                  color: Colors.white,
-                  size: 30,
+                  color: protectionEnabled ? AppTheme.accentGreen : AppTheme.accentBlue,
+                  size: 26,
                 ),
               ),
               const SizedBox(width: 16),
@@ -487,7 +499,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildTipsCard() {
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: AppTheme.chromeContainer(borderRadius: 24),
+      decoration: BoxDecoration(
+        color: AppTheme.backgroundCard,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: AppTheme.chromeMedium.withValues(alpha: 0.08),
+        ),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: const [

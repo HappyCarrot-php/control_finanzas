@@ -18,7 +18,18 @@ class CategoryDetailScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(category.name),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              _getIconData(category.icon),
+              size: 20,
+              color: color,
+            ),
+            const SizedBox(width: 10),
+            Text(category.name),
+          ],
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -48,9 +59,19 @@ class CategoryDetailScreen extends StatelessWidget {
                 width: double.infinity,
                 margin: const EdgeInsets.all(16),
                 padding: const EdgeInsets.all(24),
-                decoration: AppTheme.shinyCard(
-                  color: color,
-                  borderRadius: 20,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      color.withValues(alpha: 0.2),
+                      color.withValues(alpha: 0.08),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: color.withValues(alpha: 0.15),
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -60,20 +81,20 @@ class CategoryDetailScreen extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: color.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Icon(
                             _getIconData(category.icon),
-                            color: Colors.white,
-                            size: 32,
+                            color: color,
+                            size: 28,
                           ),
                         ),
                         const Spacer(),
                         Icon(
                           balance >= 0 ? Icons.trending_up : Icons.trending_down,
-                          color: Colors.white,
-                          size: 32,
+                          color: balance >= 0 ? AppTheme.accentGreen : AppTheme.accentRed,
+                          size: 28,
                         ),
                       ],
                     ),
@@ -81,18 +102,18 @@ class CategoryDetailScreen extends StatelessWidget {
                     Text(
                       'Balance en ${category.name}',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: 16,
+                        color: AppTheme.chromeLight.withValues(alpha: 0.7),
+                        fontSize: 14,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       formatter.format(balance),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 38,
-                        fontWeight: FontWeight.bold,
+                      style: TextStyle(
+                        color: color,
+                        fontSize: 34,
+                        fontWeight: FontWeight.w800,
                         letterSpacing: -1,
                       ),
                     ),
@@ -100,8 +121,8 @@ class CategoryDetailScreen extends StatelessWidget {
                     Text(
                       '${transactions.length} transaccion${transactions.length != 1 ? 'es' : ''}',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
-                        fontSize: 14,
+                        color: AppTheme.chromeMedium.withValues(alpha: 0.5),
+                        fontSize: 13,
                       ),
                     ),
                   ],
@@ -117,73 +138,48 @@ class CategoryDetailScreen extends StatelessWidget {
                           children: [
                             Icon(
                               Icons.receipt_long,
-                              size: 64,
-                              color: AppTheme.chromeMedium.withOpacity(0.5),
+                              size: 48,
+                              color: AppTheme.chromeMedium.withValues(alpha: 0.3),
                             ),
                             const SizedBox(height: 16),
                             Text(
                               'No hay transacciones',
                               style: TextStyle(
-                                color: AppTheme.chromeMedium.withOpacity(0.7),
+                                color: AppTheme.chromeMedium.withValues(alpha: 0.6),
                                 fontSize: 16,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 4),
                             Text(
                               'Presiona + para agregar una',
                               style: TextStyle(
-                                color: AppTheme.chromeMedium.withOpacity(0.5),
-                                fontSize: 14,
+                                color: AppTheme.chromeMedium.withValues(alpha: 0.4),
+                                fontSize: 13,
                               ),
                             ),
                             const SizedBox(height: 16),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                               decoration: BoxDecoration(
-                                color: AppTheme.backgroundCard,
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: AppTheme.chromeMedium.withOpacity(0.2),
-                                ),
+                                color: AppTheme.backgroundCardLight.withValues(alpha: 0.3),
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              child: Column(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.touch_app,
-                                        size: 16,
-                                        color: AppTheme.chromeMedium.withOpacity(0.5),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'Toca para editar',
-                                        style: TextStyle(
-                                          color: AppTheme.chromeMedium.withOpacity(0.5),
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
+                                  Icon(
+                                    Icons.touch_app_outlined,
+                                    size: 14,
+                                    color: AppTheme.chromeMedium.withValues(alpha: 0.4),
                                   ),
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.swipe_left,
-                                        size: 16,
-                                        color: AppTheme.chromeMedium.withOpacity(0.5),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'Desliza para eliminar',
-                                        style: TextStyle(
-                                          color: AppTheme.chromeMedium.withOpacity(0.5),
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Toca para editar · Desliza para eliminar',
+                                    style: TextStyle(
+                                      color: AppTheme.chromeMedium.withValues(alpha: 0.4),
+                                      fontSize: 11,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -225,12 +221,13 @@ class CategoryDetailScreen extends StatelessWidget {
       key: Key(transaction.id.toString()),
       background: Container(
         margin: const EdgeInsets.symmetric(vertical: 4),
-        decoration: AppTheme.chromeContainer(
-          color: AppTheme.accentRed.withOpacity(0.3),
+        decoration: BoxDecoration(
+          color: AppTheme.accentRed.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(12),
         ),
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
-        child: const Icon(Icons.delete, color: Colors.white, size: 32),
+        child: const Icon(Icons.delete_outline, color: AppTheme.accentRed, size: 24),
       ),
       direction: DismissDirection.endToStart,
       confirmDismiss: (direction) async {
@@ -280,21 +277,27 @@ class CategoryDetailScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         child: Container(
           margin: const EdgeInsets.symmetric(vertical: 4),
-          padding: const EdgeInsets.all(16),
-          decoration: AppTheme.chromeContainer(),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppTheme.backgroundCard,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: AppTheme.chromeMedium.withValues(alpha: 0.06),
+            ),
+          ),
           child: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: (isIncome ? AppTheme.accentGreen : AppTheme.accentRed)
-                      .withOpacity(0.2),
+                      .withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
-                  isIncome ? Icons.add : Icons.remove,
+                  isIncome ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
                   color: isIncome ? AppTheme.accentGreen : AppTheme.accentRed,
-                  size: 20,
+                  size: 18,
                 ),
               ),
               const SizedBox(width: 12),
@@ -316,7 +319,7 @@ class CategoryDetailScreen extends StatelessWidget {
                     Text(
                       dateFormatter.format(transaction.date),
                       style: TextStyle(
-                        color: AppTheme.chromeMedium.withOpacity(0.7),
+                        color: AppTheme.chromeMedium.withValues(alpha: 0.5),
                         fontSize: 12,
                       ),
                     ),
@@ -337,9 +340,9 @@ class CategoryDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Icon(
-                    Icons.edit,
+                    Icons.chevron_right_rounded,
                     size: 16,
-                    color: AppTheme.chromeMedium.withOpacity(0.5),
+                    color: AppTheme.chromeMedium.withValues(alpha: 0.3),
                   ),
                 ],
               ),

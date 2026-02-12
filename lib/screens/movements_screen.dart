@@ -33,12 +33,31 @@ class _MovementsScreenState extends State<MovementsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Movimientos'),
+        title: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.swap_horiz_rounded, size: 20, color: AppTheme.accentBlue),
+            SizedBox(width: 10),
+            Text('Movimientos'),
+          ],
+        ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showMovementForm(context),
-        icon: const Icon(Icons.add),
-        label: const Text('Nuevo movimiento'),
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.accentBlue.withValues(alpha: 0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: FloatingActionButton.extended(
+          onPressed: () => _showMovementForm(context),
+          icon: const Icon(Icons.add_rounded, size: 20),
+          label: const Text('Nuevo movimiento'),
+        ),
       ),
       body: Consumer<FinanceProvider>(
         builder: (context, provider, child) {
@@ -81,27 +100,39 @@ class _MovementsScreenState extends State<MovementsScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.account_balance_wallet_outlined,
-              size: 56,
-              color: AppTheme.chromeMedium,
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: AppTheme.accentBlue.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Icon(
+                Icons.account_balance_wallet_outlined,
+                size: 40,
+                color: AppTheme.accentBlue.withValues(alpha: 0.5),
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             Text(
-              'Aún no tienes movimientos personalizados',
-              style: Theme.of(context).textTheme.titleLarge,
+              'Sin movimientos aún',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Text(
-              'Crea un movimiento para llevar el control de tus cuentas o apartados específicos dentro de cada categoría.',
-              style: Theme.of(context).textTheme.bodyMedium,
+              'Crea un movimiento para llevar el control de tus cuentas dentro de cada categoría.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppTheme.chromeMedium.withValues(alpha: 0.7),
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: () => _showMovementForm(context),
-              icon: const Icon(Icons.add),
+              icon: const Icon(Icons.add_rounded, size: 18),
               label: const Text('Crear movimiento'),
             ),
           ],
@@ -118,30 +149,55 @@ class _MovementsScreenState extends State<MovementsScreen> {
     final categoryColor = Color(int.parse(category.color, radix: 16));
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: AppTheme.chromeContainer(),
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: AppTheme.backgroundCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppTheme.chromeMedium.withValues(alpha: 0.08),
+        ),
+      ),
       child: ExpansionTile(
         tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        collapsedIconColor: AppTheme.chromeMedium,
-        iconColor: AppTheme.chromeLight,
+        collapsedIconColor: AppTheme.chromeMedium.withValues(alpha: 0.5),
+        iconColor: AppTheme.accentBlue,
+        shape: const RoundedRectangleBorder(side: BorderSide.none),
+        collapsedShape: const RoundedRectangleBorder(side: BorderSide.none),
         title: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: categoryColor.withOpacity(0.18),
+                color: categoryColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 _getIconData(category.icon),
                 color: categoryColor,
+                size: 22,
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(
-                category.name,
-                style: Theme.of(context).textTheme.titleMedium,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    category.name,
+                    style: const TextStyle(
+                      color: AppTheme.chromeLight,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                    ),
+                  ),
+                  Text(
+                    '${movements.length} movimiento${movements.length != 1 ? 's' : ''}',
+                    style: TextStyle(
+                      color: AppTheme.chromeMedium.withValues(alpha: 0.5),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -154,92 +210,125 @@ class _MovementsScreenState extends State<MovementsScreen> {
   }
 
   Widget _buildMovementTile(BuildContext context, Subcategory movement) {
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-      title: Text(
-        movement.name,
-        style: const TextStyle(
-          color: AppTheme.chromeLight,
-          fontWeight: FontWeight.w600,
-        ),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppTheme.backgroundCardLight.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(12),
       ),
-      subtitle: Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Creado el ${movement.createdDate.day}/${movement.createdDate.month}/${movement.createdDate.year}',
-            style: TextStyle(
-              color: AppTheme.chromeMedium.withOpacity(0.7),
-            ),
-          ),
-          if (movement.isInterestBearing && movement.interestRate > 0)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                'Interés diario con GAT ${movement.interestRate.toStringAsFixed(2)}%',
-                style: const TextStyle(
-                  color: AppTheme.accentBlue,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 12,
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      movement.name,
+                      style: const TextStyle(
+                        color: AppTheme.chromeLight,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${movement.createdDate.day}/${movement.createdDate.month}/${movement.createdDate.year}',
+                      style: TextStyle(
+                        color: AppTheme.chromeMedium.withValues(alpha: 0.5),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-        ],
-      ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppTheme.backgroundCardLight,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppTheme.chromeMedium.withOpacity(0.25)),
-            ),
-            child: Text(
-              FormatUtils.formatCurrency(movement.balance),
-              style: TextStyle(
-                color: movement.balance >= 0
-                    ? AppTheme.accentGreen
-                    : AppTheme.accentRed,
-                fontWeight: FontWeight.bold,
+              Text(
+                FormatUtils.formatCurrency(movement.balance),
+                style: TextStyle(
+                  color: movement.balance >= 0
+                      ? AppTheme.accentGreen
+                      : AppTheme.accentRed,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                ),
               ),
-            ),
+            ],
           ),
-          if (movement.isInterestBearing) ...[
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppTheme.accentBlue.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.auto_graph, size: 14, color: AppTheme.accentBlue),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${movement.interestRate.toStringAsFixed(2)}%',
-                    style: const TextStyle(
-                      color: AppTheme.accentBlue,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
+          if (movement.isInterestBearing && movement.interestRate > 0) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppTheme.accentBlue.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
                   ),
-                ],
-              ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.auto_graph_rounded, size: 12, color: AppTheme.accentBlue),
+                      const SizedBox(width: 4),
+                      Text(
+                        'GAT ${movement.interestRate.toStringAsFixed(2)}%',
+                        style: const TextStyle(
+                          color: AppTheme.accentBlue,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Spacer(),
+                InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: () => _showMovementForm(context, movement: movement),
+                  child: Padding(
+                    padding: const EdgeInsets.all(6),
+                    child: Icon(Icons.edit_outlined, size: 18, color: AppTheme.chromeMedium.withValues(alpha: 0.5)),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: () => _confirmDelete(context, movement),
+                  child: Padding(
+                    padding: const EdgeInsets.all(6),
+                    child: Icon(Icons.delete_outline, size: 18, color: AppTheme.accentRed.withValues(alpha: 0.6)),
+                  ),
+                ),
+              ],
             ),
           ],
-          IconButton(
-            tooltip: 'Editar',
-            onPressed: () => _showMovementForm(context, movement: movement),
-            icon: const Icon(Icons.edit, color: AppTheme.chromeMedium),
-          ),
-          IconButton(
-            tooltip: 'Eliminar',
-            onPressed: () => _confirmDelete(context, movement),
-            icon: const Icon(Icons.delete_outline, color: AppTheme.accentRed),
-          ),
+          if (!movement.isInterestBearing || movement.interestRate <= 0) ...[
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: () => _showMovementForm(context, movement: movement),
+                  child: Padding(
+                    padding: const EdgeInsets.all(6),
+                    child: Icon(Icons.edit_outlined, size: 18, color: AppTheme.chromeMedium.withValues(alpha: 0.5)),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: () => _confirmDelete(context, movement),
+                  child: Padding(
+                    padding: const EdgeInsets.all(6),
+                    child: Icon(Icons.delete_outline, size: 18, color: AppTheme.accentRed.withValues(alpha: 0.6)),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -278,7 +367,7 @@ class _MovementsScreenState extends State<MovementsScreen> {
       isScrollControlled: true,
       backgroundColor: AppTheme.backgroundCard,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
         return StatefulBuilder(
@@ -288,15 +377,30 @@ class _MovementsScreenState extends State<MovementsScreen> {
                 bottom: MediaQuery.of(context).viewInsets.bottom,
                 left: 20,
                 right: 20,
-                top: 24,
+                top: 16,
               ),
               child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: AppTheme.chromeMedium.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
                     Text(
                       movement == null ? 'Nuevo movimiento' : 'Editar movimiento',
-                      style: Theme.of(context).textTheme.headlineMedium,
+                      style: const TextStyle(
+                        color: AppTheme.chromeLight,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<FinancialCategory>(
@@ -345,7 +449,7 @@ class _MovementsScreenState extends State<MovementsScreen> {
                     ),
                     const SizedBox(height: 16),
                     Container(
-                      decoration: AppTheme.chromeContainer(withGradient: false),
+                      decoration: BoxDecoration(color: AppTheme.backgroundCard, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppTheme.chromeMedium.withValues(alpha: 0.08))),
                       child: Column(
                         children: [
                           SwitchListTile.adaptive(

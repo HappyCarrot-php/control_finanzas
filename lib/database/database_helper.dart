@@ -601,7 +601,9 @@ class DatabaseHelper {
       return 0.0;
     }
 
-    final double dailyRate = rate / 100 / 365;
+    // GAT es tasa efectiva anual, la tasa diaria correcta es:
+    // dailyRate = (1 + GAT/100)^(1/365) - 1
+    final double dailyRate = pow(1 + rate / 100, 1.0 / 365).toDouble() - 1.0;
     final double growthFactor = pow(1 + dailyRate, days).toDouble();
     final double newBalance = balance * growthFactor;
     final double interestEarned = newBalance - balance;

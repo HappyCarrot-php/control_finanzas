@@ -12,12 +12,13 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _scaleAnimation;
   late final Animation<double> _opacityAnimation;
   late final AnimationController _pulseController;
   late final Animation<double> _pulseAnimation;
+  late final AnimationController _shimmerController;
 
   @override
   void initState() {
@@ -35,6 +36,11 @@ class _SplashScreenState extends State<SplashScreen>
     _pulseAnimation = Tween<double>(begin: 0.94, end: 1.06).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
+
+    _shimmerController = AnimationController(
+      duration: const Duration(milliseconds: 2400),
+      vsync: this,
+    )..repeat();
 
     _scaleAnimation = Tween<double>(
       begin: 0.5,
@@ -63,6 +69,7 @@ class _SplashScreenState extends State<SplashScreen>
   void dispose() {
     _controller.dispose();
     _pulseController.dispose();
+    _shimmerController.dispose();
     super.dispose();
   }
 
@@ -75,9 +82,9 @@ class _SplashScreenState extends State<SplashScreen>
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFF0B1D3C),
-              Color(0xFF15294C),
-              AppTheme.backgroundDark,
+              Color(0xFF060D19),
+              Color(0xFF0A1628),
+              Color(0xFF0D1117),
             ],
           ),
         ),
@@ -88,7 +95,7 @@ class _SplashScreenState extends State<SplashScreen>
               right: -80,
               child: _buildBackdropCircle(
                 280,
-                AppTheme.accentBlue.withValues(alpha: 0.18),
+                AppTheme.accentBlue.withValues(alpha: 0.08),
               ),
             ),
             Positioned(
@@ -96,7 +103,7 @@ class _SplashScreenState extends State<SplashScreen>
               left: -60,
               child: _buildBackdropCircle(
                 260,
-                AppTheme.accentOrange.withValues(alpha: 0.12),
+                AppTheme.accentBlue.withValues(alpha: 0.05),
               ),
             ),
             Positioned(
@@ -104,7 +111,7 @@ class _SplashScreenState extends State<SplashScreen>
               left: -40,
               child: _buildBackdropCircle(
                 180,
-                AppTheme.chromeMedium.withValues(alpha: 0.08),
+                AppTheme.chromeMedium.withValues(alpha: 0.04),
               ),
             ),
             Positioned(
@@ -117,7 +124,7 @@ class _SplashScreenState extends State<SplashScreen>
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [Colors.transparent, Color(0xFF10131C)],
+                    colors: [Colors.transparent, Color(0xFF060D19)],
                   ),
                 ),
               ),
@@ -135,43 +142,43 @@ class _SplashScreenState extends State<SplashScreen>
               bottom: 48,
               left: 32,
               right: 32,
-              child: Row(
-                children: [
-                  Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppTheme.chromeMedium.withValues(alpha: 0.25),
+              child: AnimatedBuilder(
+                animation: _opacityAnimation,
+                builder: (context, child) => Opacity(
+                  opacity: _opacityAnimation.value,
+                  child: child,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppTheme.accentBlue.withValues(alpha: 0.1),
+                        border: Border.all(
+                          color: AppTheme.accentBlue.withValues(alpha: 0.2),
+                        ),
                       ),
-                      gradient: const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          AppTheme.backgroundCardLight,
-                          AppTheme.backgroundCard,
-                        ],
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.verified_user_outlined,
-                      color: AppTheme.chromeLight,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Text(
-                      'Sesión protegida. Personalizando indicadores para tu portafolio.',
-                      style: TextStyle(
-                        color: AppTheme.chromeMedium.withValues(alpha: 0.85),
-                        fontSize: 13,
-                        letterSpacing: 0.3,
+                      child: const Icon(
+                        Icons.lock_outline_rounded,
+                        color: AppTheme.accentBlue,
+                        size: 16,
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Sesión protegida · Datos cifrados localmente',
+                        style: TextStyle(
+                          color: AppTheme.chromeMedium.withValues(alpha: 0.6),
+                          fontSize: 12,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -194,78 +201,69 @@ class _SplashScreenState extends State<SplashScreen>
                 width: 320,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 32,
-                  vertical: 36,
+                  vertical: 40,
                 ),
                 decoration: BoxDecoration(
-                  color: AppTheme.backgroundCard.withValues(alpha: 0.95),
-                  borderRadius: BorderRadius.circular(28),
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF141C2B),
+                      Color(0xFF0F1520),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: AppTheme.accentBlue.withValues(alpha: 0.25),
-                    width: 1.4,
+                    color: AppTheme.accentBlue.withValues(alpha: 0.15),
+                    width: 1,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.4),
-                      blurRadius: 32,
-                      offset: const Offset(0, 28),
+                      color: Colors.black.withValues(alpha: 0.5),
+                      blurRadius: 40,
+                      offset: const Offset(0, 20),
                     ),
                     BoxShadow(
-                      color: AppTheme.accentBlue.withValues(alpha: 0.18),
-                      blurRadius: 18,
-                      offset: const Offset(0, 12),
+                      color: AppTheme.accentBlue.withValues(alpha: 0.08),
+                      blurRadius: 30,
+                      offset: const Offset(0, 8),
                     ),
                   ],
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Center(
-                      child: ScaleTransition(
-                        scale: _pulseAnimation,
-                        child: Container(
-                          width: 120,
-                          height: 120,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: const LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                AppTheme.accentBlue,
-                                AppTheme.accentOrange,
-                              ],
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppTheme.accentBlue.withValues(
-                                  alpha: 0.45,
-                                ),
-                                blurRadius: 24,
-                                spreadRadius: 2,
-                                offset: const Offset(0, 14),
-                              ),
+                    ScaleTransition(
+                      scale: _pulseAnimation,
+                      child: Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Color(0xFF3B82F6),
+                              Color(0xFF1D4ED8),
                             ],
                           ),
-                          child: Container(
-                            margin: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  Colors.white.withValues(alpha: 0.9),
-                                  Colors.white.withValues(alpha: 0.6),
-                                ],
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF3B82F6).withValues(
+                                alpha: 0.35,
                               ),
+                              blurRadius: 28,
+                              spreadRadius: 2,
+                              offset: const Offset(0, 10),
                             ),
-                            child: const Icon(
-                              Icons.savings_rounded,
-                              size: 48,
-                              color: AppTheme.chromeBlack,
-                            ),
-                          ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.savings_rounded,
+                          size: 42,
+                          color: Colors.white,
                         ),
                       ),
                     ),
@@ -273,68 +271,53 @@ class _SplashScreenState extends State<SplashScreen>
                     const Text(
                       'Control Finanzas',
                       style: TextStyle(
-                        color: AppTheme.chromeLight,
-                        fontSize: 28,
+                        color: Colors.white,
+                        fontSize: 26,
                         fontWeight: FontWeight.w700,
-                        letterSpacing: 1.2,
+                        letterSpacing: 0.5,
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: AppTheme.accentBlue.withValues(alpha: 0.4),
-                        ),
-                        color: AppTheme.backgroundCardLight.withValues(
-                          alpha: 0.45,
-                        ),
-                      ),
-                      child: Text(
-                        'Tu dinero bajo control',
-                        style: TextStyle(
-                          color: AppTheme.chromeLight.withValues(alpha: 0.92),
-                          fontSize: 14,
-                          letterSpacing: 0.6,
-                        ),
+                    Text(
+                      'Tu dinero bajo control',
+                      style: TextStyle(
+                        color: AppTheme.accentBlue.withValues(alpha: 0.8),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 0.8,
                       ),
                     ),
                     const SizedBox(height: 28),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
+                        horizontal: 14,
+                        vertical: 10,
                       ),
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(18),
-                        color: AppTheme.backgroundCardLight.withValues(
-                          alpha: 0.6,
-                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        color: AppTheme.accentBlue.withValues(alpha: 0.08),
                         border: Border.all(
-                          color: AppTheme.chromeMedium.withValues(alpha: 0.15),
+                          color: AppTheme.accentBlue.withValues(alpha: 0.12),
                         ),
                       ),
                       child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.shield_outlined,
-                            size: 18,
-                            color: AppTheme.accentBlue,
+                            size: 16,
+                            color: AppTheme.accentBlue.withValues(alpha: 0.7),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
+                          const SizedBox(width: 8),
+                          Flexible(
                             child: Text(
-                              'Inicializando tablero principal y preferencias de seguridad',
+                              'Cargando datos y preferencias...',
                               style: TextStyle(
                                 color: AppTheme.chromeLight.withValues(
-                                  alpha: 0.9,
+                                  alpha: 0.7,
                                 ),
-                                fontSize: 13,
-                                letterSpacing: 0.4,
+                                fontSize: 12,
+                                letterSpacing: 0.3,
                               ),
                             ),
                           ),
@@ -371,44 +354,36 @@ class _SplashScreenState extends State<SplashScreen>
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          'Sincronizando datos financieros',
+          'Sincronizando datos',
           style: TextStyle(
-            color: AppTheme.chromeLight.withValues(alpha: 0.85),
-            fontSize: 14,
+            color: AppTheme.chromeLight.withValues(alpha: 0.6),
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
             letterSpacing: 0.5,
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
         SizedBox(
-          width: 240,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              color: AppTheme.backgroundCardLight.withValues(alpha: 0.45),
-              border: Border.all(
-                color: AppTheme.accentBlue.withValues(alpha: 0.25),
+          width: 200,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              minHeight: 3,
+              value: clamped,
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                Color(0xFF3B82F6),
               ),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: LinearProgressIndicator(
-                minHeight: 6,
-                value: clamped,
-                valueColor: const AlwaysStoppedAnimation<Color>(
-                  AppTheme.accentBlue,
-                ),
-                backgroundColor: AppTheme.chromeDark.withValues(alpha: 0.35),
-              ),
+              backgroundColor: AppTheme.chromeDark.withValues(alpha: 0.2),
             ),
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
         Text(
-          '$percentage% listo',
+          '$percentage%',
           style: TextStyle(
-            color: AppTheme.chromeMedium.withValues(alpha: 0.85),
-            fontSize: 13,
+            color: AppTheme.chromeMedium.withValues(alpha: 0.5),
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
             letterSpacing: 0.4,
           ),
         ),

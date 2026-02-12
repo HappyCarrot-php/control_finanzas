@@ -14,7 +14,14 @@ class TransactionsHistoryScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Historial de Transacciones'),
+        title: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.history_rounded, size: 20, color: AppTheme.accentPurple),
+            SizedBox(width: 10),
+            Text('Historial de Transacciones'),
+          ],
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -66,78 +73,34 @@ class TransactionsHistoryScreen extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.receipt_long,
-            size: 80,
-            color: AppTheme.chromeMedium.withOpacity(0.5),
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              color: AppTheme.accentBlue.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Icon(
+              Icons.receipt_long_outlined,
+              size: 36,
+              color: AppTheme.accentBlue.withValues(alpha: 0.4),
+            ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
           Text(
             'No hay transacciones',
             style: TextStyle(
-              color: AppTheme.chromeMedium.withOpacity(0.7),
-              fontSize: 20,
+              color: AppTheme.chromeMedium.withValues(alpha: 0.7),
+              fontSize: 18,
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Text(
             'Comienza agregando tu primera transacción',
             style: TextStyle(
-              color: AppTheme.chromeMedium.withOpacity(0.5),
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(height: 24),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-            decoration: BoxDecoration(
-              color: AppTheme.backgroundCard,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: AppTheme.chromeMedium.withOpacity(0.2),
-              ),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.touch_app,
-                      size: 18,
-                      color: AppTheme.chromeMedium.withOpacity(0.5),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Toca una transacción para editarla',
-                      style: TextStyle(
-                        color: AppTheme.chromeMedium.withOpacity(0.5),
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.swipe_left,
-                      size: 18,
-                      color: AppTheme.chromeMedium.withOpacity(0.5),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Desliza hacia la izquierda para eliminar',
-                      style: TextStyle(
-                        color: AppTheme.chromeMedium.withOpacity(0.5),
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+              color: AppTheme.chromeMedium.withValues(alpha: 0.4),
+              fontSize: 13,
             ),
           ),
         ],
@@ -222,7 +185,7 @@ class TransactionsHistoryScreen extends StatelessWidget {
                     Text(
                       '${transactions.length} transacción${transactions.length != 1 ? 'es' : ''}',
                       style: TextStyle(
-                        color: AppTheme.chromeMedium.withOpacity(0.7),
+                        color: AppTheme.chromeMedium.withValues(alpha: 0.5),
                         fontSize: 12,
                       ),
                     ),
@@ -247,7 +210,7 @@ class TransactionsHistoryScreen extends StatelessWidget {
                       Text(
                         '+${formatter.format(totalIncome)}',
                         style: TextStyle(
-                          color: AppTheme.accentGreen.withOpacity(0.7),
+                          color: AppTheme.accentGreen.withValues(alpha: 0.7),
                           fontSize: 11,
                         ),
                       ),
@@ -255,7 +218,7 @@ class TransactionsHistoryScreen extends StatelessWidget {
                       Text(
                         '-${formatter.format(totalExpense)}',
                         style: TextStyle(
-                          color: AppTheme.accentRed.withOpacity(0.7),
+                          color: AppTheme.accentRed.withValues(alpha: 0.7),
                           fontSize: 11,
                         ),
                       ),
@@ -297,26 +260,13 @@ class TransactionsHistoryScreen extends StatelessWidget {
       key: Key('transaction_${transaction.id}'),
       background: Container(
         margin: const EdgeInsets.symmetric(vertical: 4),
-        decoration: AppTheme.chromeContainer(
-          color: AppTheme.accentRed.withOpacity(0.3),
+        decoration: BoxDecoration(
+          color: AppTheme.accentRed.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(12),
         ),
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
-        child: const Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.delete, color: Colors.white, size: 32),
-            SizedBox(height: 4),
-            Text(
-              'Eliminar',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
+        child: const Icon(Icons.delete_outline, color: AppTheme.accentRed, size: 24),
       ),
       direction: DismissDirection.endToStart,
       confirmDismiss: (direction) async {
@@ -416,14 +366,20 @@ class TransactionsHistoryScreen extends StatelessWidget {
         child: Container(
           margin: const EdgeInsets.symmetric(vertical: 4),
           padding: const EdgeInsets.all(16),
-          decoration: AppTheme.chromeContainer(),
+          decoration: BoxDecoration(
+            color: AppTheme.backgroundCard,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: AppTheme.chromeMedium.withValues(alpha: 0.06),
+            ),
+          ),
           child: Row(
             children: [
               // Icono de categoría
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: categoryColor.withOpacity(0.2),
+                  color: categoryColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
@@ -455,7 +411,7 @@ class TransactionsHistoryScreen extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: categoryColor.withOpacity(0.15),
+                            color: categoryColor.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -471,13 +427,13 @@ class TransactionsHistoryScreen extends StatelessWidget {
                         Icon(
                           Icons.access_time,
                           size: 12,
-                          color: AppTheme.chromeMedium.withOpacity(0.5),
+                          color: AppTheme.chromeMedium.withValues(alpha: 0.4),
                         ),
                         const SizedBox(width: 4),
                         Text(
                           timeFormatter.format(transaction.date),
                           style: TextStyle(
-                            color: AppTheme.chromeMedium.withOpacity(0.7),
+                            color: AppTheme.chromeMedium.withValues(alpha: 0.5),
                             fontSize: 12,
                           ),
                         ),
@@ -503,25 +459,16 @@ class TransactionsHistoryScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: AppTheme.chromeMedium.withOpacity(0.1),
+                      color: AppTheme.chromeMedium.withValues(alpha: 0.06),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          Icons.edit,
-                          size: 12,
-                          color: AppTheme.chromeMedium.withOpacity(0.6),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Editar',
-                          style: TextStyle(
-                            color: AppTheme.chromeMedium.withOpacity(0.6),
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          Icons.chevron_right_rounded,
+                          size: 14,
+                          color: AppTheme.chromeMedium.withValues(alpha: 0.4),
                         ),
                       ],
                     ),

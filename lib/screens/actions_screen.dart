@@ -152,66 +152,62 @@ class _ActionCard extends StatelessWidget {
       width: boundedWidth,
       child: Container(
         padding: const EdgeInsets.all(20),
-        decoration: AppTheme.chromeContainer(),
+        decoration: BoxDecoration(
+          color: AppTheme.backgroundCard,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: AppTheme.chromeMedium.withValues(alpha: 0.08),
+          ),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [
-                    data.accent.withOpacity(0.85),
-                    data.accent,
-                    data.accent.withOpacity(0.65),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: data.accent.withOpacity(0.45),
-                    blurRadius: 16,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
+                color: data.accent.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(
                 data.icon,
-                size: 26,
-                color: Colors.white,
+                size: 24,
+                color: data.accent,
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             Text(
               data.title,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontSize: 20,
-                    color: AppTheme.chromeLight,
-                  ),
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.chromeLight,
+              ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 6),
             Text(
               data.description,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.chromeMedium,
-                    height: 1.4,
-                  ),
-            ),
-            const SizedBox(height: 24),
-            FilledButton.icon(
-              style: FilledButton.styleFrom(
-                backgroundColor: data.accent,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 18),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              style: TextStyle(
+                color: AppTheme.chromeMedium.withValues(alpha: 0.7),
+                fontSize: 13,
+                height: 1.4,
               ),
-              onPressed: data.onTap,
-              icon: const Icon(Icons.arrow_forward_rounded, size: 18),
-              label: Text(
-                data.ctaLabel,
-                style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 18),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: data.accent.withValues(alpha: 0.12),
+                  foregroundColor: data.accent,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  elevation: 0,
+                ),
+                onPressed: data.onTap,
+                child: Text(
+                  data.ctaLabel,
+                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                ),
               ),
             ),
           ],

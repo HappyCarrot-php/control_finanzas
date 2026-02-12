@@ -76,22 +76,30 @@ class _HomeScreenState extends State<HomeScreen> {
     final displayBalance = isHidden ? '******' : FormatUtils.formatCurrency(balance);
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [
-            AppTheme.chromeBlack,
-            AppTheme.chromeDeep,
+            Color(0xFF1A2744),
+            Color(0xFF0F1B2D),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: AppTheme.accentBlue.withOpacity(0.15),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.3),
-            blurRadius: 15,
+            blurRadius: 20,
             offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: AppTheme.accentBlue.withOpacity(0.08),
+            blurRadius: 40,
+            offset: const Offset(0, -4),
           ),
         ],
       ),
@@ -102,26 +110,48 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
+                  gradient: const LinearGradient(
+                    colors: [AppTheme.accentBlue, Color(0xFF3A7BD5)],
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.accentBlue.withOpacity(0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: const Icon(
-                  Icons.account_balance_wallet,
+                  Icons.account_balance_wallet_rounded,
                   color: Colors.white,
-                  size: 28,
+                  size: 24,
                 ),
               ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text(
-                  'Balance Total',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
-                  ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Balance Total',
+                      style: TextStyle(
+                        color: AppTheme.chromeMedium,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Actualizado: ${FormatUtils.formatDate(DateTime.now())}',
+                      style: TextStyle(
+                        color: AppTheme.chromeMedium.withOpacity(0.5),
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Material(
@@ -130,40 +160,32 @@ class _HomeScreenState extends State<HomeScreen> {
                   onTap: onToggle,
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.12),
+                      color: Colors.white.withOpacity(0.06),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withOpacity(0.1),
                       ),
                     ),
                     child: Icon(
-                      isHidden ? Icons.visibility_off : Icons.visibility,
-                      color: Colors.white,
-                      size: 22,
+                      isHidden ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                      color: AppTheme.chromeMedium,
+                      size: 20,
                     ),
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           Text(
             displayBalance,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 36,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.5,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Actualizado: ${FormatUtils.formatDate(DateTime.now())}',
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.8),
-              fontSize: 14,
+              fontSize: 38,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -1,
             ),
           ),
         ],
@@ -259,7 +281,7 @@ class _HomeScreenState extends State<HomeScreen> {
       },
       borderRadius: BorderRadius.circular(22),
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(22),
           gradient: LinearGradient(
@@ -267,15 +289,15 @@ class _HomeScreenState extends State<HomeScreen> {
             end: Alignment.bottomRight,
             colors: [
               AppTheme.backgroundCard,
-              AppTheme.backgroundCardLight.withOpacity(0.88),
+              AppTheme.backgroundCardLight.withOpacity(0.6),
             ],
           ),
-          border: Border.all(color: color.withOpacity(0.35)),
+          border: Border.all(color: color.withOpacity(0.2)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.28),
-              blurRadius: 18,
-              offset: const Offset(0, 12),
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -287,70 +309,68 @@ class _HomeScreenState extends State<HomeScreen> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: [
-                        color.withOpacity(0.85),
-                        color,
-                      ],
-                    ),
+                    color: color.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
                     _getIconData(category.icon),
-                    color: Colors.white,
-                    size: 24,
+                    color: color,
+                    size: 22,
                   ),
                 ),
                 const Spacer(),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.06),
-                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.white.withOpacity(0.04),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: AppTheme.chromeMedium.withOpacity(0.1),
+                    ),
                   ),
                   child: Text(
                     participationText,
                     style: const TextStyle(
-                      color: AppTheme.chromeLight,
-                      fontSize: 12,
+                      color: AppTheme.chromeMedium,
+                      fontSize: 11,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             Text(
               category.name,
               style: const TextStyle(
                 color: AppTheme.chromeLight,
-                fontSize: 17,
+                fontSize: 15,
                 fontWeight: FontWeight.w700,
                 height: 1.2,
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             Text(
               isHidden ? '******' : FormatUtils.formatCurrency(balance),
               style: TextStyle(
                 color: isPositive ? AppTheme.accentGreen : AppTheme.accentRed,
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
+                fontSize: 19,
+                fontWeight: FontWeight.w800,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             ClipRRect(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(8),
               child: LinearProgressIndicator(
                 value: participation,
-                minHeight: 6,
-                backgroundColor: Colors.white.withOpacity(0.12),
-                valueColor: AlwaysStoppedAnimation<Color>(color.withOpacity(0.85)),
+                minHeight: 4,
+                backgroundColor: Colors.white.withOpacity(0.06),
+                valueColor: AlwaysStoppedAnimation<Color>(color.withOpacity(0.7)),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
           ],
         ),
       ),

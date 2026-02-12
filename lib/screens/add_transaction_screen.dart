@@ -111,7 +111,18 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.transactionToEdit == null ? 'Nueva Transacción' : 'Editar Transacción'),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              widget.transactionToEdit == null ? Icons.add_circle_outline : Icons.edit_outlined,
+              size: 20,
+              color: AppTheme.accentBlue,
+            ),
+            const SizedBox(width: 10),
+            Text(widget.transactionToEdit == null ? 'Nueva Transacción' : 'Editar Transacción'),
+          ],
+        ),
         actions: [
           if (_showSumarButton)
             TextButton(
@@ -141,7 +152,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             children: [
               // Selector de tipo de transacción
               Container(
-                decoration: AppTheme.chromeContainer(),
+                decoration: BoxDecoration(
+                  color: AppTheme.backgroundCard,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: AppTheme.chromeMedium.withValues(alpha: 0.08),
+                  ),
+                ),
                 padding: const EdgeInsets.all(4),
                 child: Row(
                   children: [
@@ -165,7 +182,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               ),
               const SizedBox(height: 8),
               Container(
-                decoration: AppTheme.chromeContainer(),
+                decoration: BoxDecoration(color: AppTheme.backgroundCard, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppTheme.chromeMedium.withValues(alpha: 0.08))),
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<FinancialCategory>(
@@ -241,7 +258,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 ),
                 const SizedBox(height: 8),
                 Container(
-                  decoration: AppTheme.chromeContainer(),
+                  decoration: BoxDecoration(color: AppTheme.backgroundCard, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppTheme.chromeMedium.withValues(alpha: 0.08))),
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                   child: DropdownButtonHideUnderline(
                     child: Consumer<FinanceProvider>(
@@ -421,7 +438,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
               // Opción para excluir del capital total
               Container(
-                decoration: AppTheme.chromeContainer(withGradient: false),
+                decoration: BoxDecoration(color: AppTheme.backgroundCard, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppTheme.chromeMedium.withValues(alpha: 0.08))),
                 child: CheckboxListTile(
                   value: _excludeFromTotal,
                   onChanged: (value) {
@@ -443,7 +460,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
               if (_transactionType == 'income') ...[
                 Container(
-                  decoration: AppTheme.chromeContainer(withGradient: false),
+                  decoration: BoxDecoration(color: AppTheme.backgroundCard, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppTheme.chromeMedium.withValues(alpha: 0.08))),
                   child: Column(
                     children: [
                       SwitchListTile.adaptive(
@@ -539,7 +556,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
                   padding: const EdgeInsets.all(16),
-                  decoration: AppTheme.chromeContainer(),
+                  decoration: BoxDecoration(color: AppTheme.backgroundCard, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppTheme.chromeMedium.withValues(alpha: 0.08))),
                   child: Row(
                     children: [
                       const Icon(Icons.calendar_today, color: AppTheme.chromeMedium),
@@ -561,27 +578,44 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               const SizedBox(height: 32),
 
               // Botón de guardar
-              ElevatedButton(
-                onPressed: _isLoading ? null : _saveTransaction,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: _transactionType == 'income' 
-                      ? AppTheme.accentGreen 
-                      : AppTheme.accentRed,
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: (_transactionType == 'income' 
+                          ? AppTheme.accentGreen 
+                          : AppTheme.accentRed).withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _saveTransaction,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: _transactionType == 'income' 
+                        ? AppTheme.accentGreen 
+                        : AppTheme.accentRed,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : Text(
+                          widget.transactionToEdit == null ? 'Guardar Transacción' : 'Actualizar',
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                         ),
-                      )
-                    : Text(
-                        widget.transactionToEdit == null ? 'Guardar Transacción' : 'Actualizar Transacción',
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
+                ),
               ),
             ],
           ),
@@ -980,7 +1014,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.backgroundCard,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Nuevo Movimiento'),
+        title: const Text('Nuevo Movimiento', style: TextStyle(color: AppTheme.chromeLight, fontWeight: FontWeight.w700)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -988,11 +1022,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               controller: nameController,
               decoration: InputDecoration(
                 labelText: 'Nombre (ej: Nu Débito, BBVA Ahorro)',
-                labelStyle: const TextStyle(color: Colors.black87),
-                prefixIcon: const Icon(Icons.account_balance_wallet, color: Colors.black87),
+                prefixIcon: Icon(Icons.account_balance_wallet_outlined, color: AppTheme.chromeMedium.withValues(alpha: 0.6)),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
+              style: const TextStyle(color: AppTheme.chromeLight, fontWeight: FontWeight.w600),
               maxLength: 50,
             ),
             const SizedBox(height: 16),
@@ -1004,11 +1037,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               ],
               decoration: InputDecoration(
                 labelText: 'Saldo Inicial (MXN)',
-                labelStyle: const TextStyle(color: Colors.black87),
-                prefixIcon: const Icon(Icons.attach_money, color: Colors.black87),
+                prefixIcon: Icon(Icons.attach_money, color: AppTheme.chromeMedium.withValues(alpha: 0.6)),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
+              style: const TextStyle(color: AppTheme.chromeLight, fontWeight: FontWeight.w600),
             ),
           ],
         ),
